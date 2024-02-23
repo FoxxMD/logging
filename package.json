@@ -1,0 +1,68 @@
+{
+  "name": "@foxxmd/logging",
+  "type": "module",
+  "version": "0.1.0",
+  "repository": "https://github.com/foxxmd/logging",
+  "description": "",
+  "scripts": {
+    "typedoc": "typedoc",
+    "build": "tsc",
+    "prepare": "tshy",
+    "test": "mocha --recursive ./tests/*.test.ts"
+  },
+  "keywords": [],
+  "author": "FoxxMD",
+  "license": "MIT",
+  "private": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.3.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "tshy": {
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "import": {
+          "types": "./dist/esm/index.d.ts",
+          "default": "./dist/esm/index.js"
+        }
+      }
+    },
+    "dialects": [
+      "esm"
+    ]
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.0",
+    "@types/chai-as-promised": "^7.1.5",
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^18.0.0",
+    "chai": "^4.3.6",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "tshy": "^1.7.0",
+    "typescript": "^5.3.3",
+    "yaml": "^2.3.4"
+  },
+  "dependencies": {
+    "pino": "^8.19.0",
+    "pino-pretty": "^10.3.1",
+    "pino-roll": "^1.0.0-rc.1",
+    "pony-cause": "^2.1.10",
+    "tsx": "^4.7.0"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      }
+    }
+  }
+}

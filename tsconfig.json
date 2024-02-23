@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
+    "target": "ESNext",
+    "declaration": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "typeRoots": [
+    "./src/types.d.ts"
+  ],
+  "include": [
+      "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

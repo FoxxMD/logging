@@ -1,0 +1,29 @@
+# https://github.com/TypeStrong/typedoc/issues/1485#issuecomment-889376169
+name: Typedoc Deploy
+
+on: [push, pull_request]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+      - run: yarn run build
+
+      - name: Create the docs directory locally in CI
+        run: npx typedoc
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: docs
