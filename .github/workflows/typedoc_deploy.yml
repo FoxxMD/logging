@@ -16,8 +16,8 @@ jobs:
           node-version: 18.x
           cache: 'npm'
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build
+      - run: npm ci
+      - run: npm run build
 
       - name: Create the docs directory locally in CI
         run: npx typedoc
