@@ -1,10 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "name": "string-sameness Docs",
+  "name": "@foxxmd/logging Docs",
   "entryPoints": [
-    "./src",
-    "./src/matchingStrategies/index.ts",
-    "./src/normalization/index.ts"
+    "./src/index.ts"
   ],
   "sort": ["source-order"],
   "categorizeByGroup": false,
@@ -12,7 +10,7 @@
     "Functions": 1.5
   },
   "navigationLinks": {
-    "Docs": "http://foxxmd.github.io/string-sameness",
-    "GitHub": "https://github.com/foxxmd/string-sameness"
+    "Docs": "http://foxxmd.github.io/logging",
+    "GitHub": "https://github.com/foxxmd/logging"
   }
 }
