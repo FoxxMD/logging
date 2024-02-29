@@ -49,19 +49,39 @@ export const loggerDebug = buildLogger('debug', [buildDestinationStdout('debug')
 export const loggerApp = (config: LogOptions | object = {}) => {
     const options = parseLogOptions(config);
     const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
-    const file = buildDestinationFile(options.file, {path: path.resolve(logPath, 'app.log'), append: true});
-    if(file !== undefined) {
-        streams.push(file);
+
+    let error: Error;
+    try {
+        const file = buildDestinationFile(options.file, {path: path.resolve(logPath, 'app.log'), append: true});
+        if (file !== undefined) {
+            streams.push(file);
+        }
+    } catch (e) {
+        error = e;
     }
-    return buildLogger('debug' as LogLevel, streams);
+    const logger = buildLogger('debug' as LogLevel, streams);
+    if (error !== undefined) {
+        logger.warn(error);
+    }
+    return logger;
 }
 
 export const loggerAppRolling = async (config: LogOptions | object = {}) => {
     const options = parseLogOptions(config);
     const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
-    const file = await buildDestinationRollingFile(options.file, {path: logPath});
-    if(file !== undefined) {
-        streams.push(file);
+
+    let error: Error;
+    try {
+        const file = await buildDestinationRollingFile(options.file, {path: logPath});
+        if (file !== undefined) {
+            streams.push(file);
+        }
+    } catch (e) {
+        error = e;
     }
-    return buildLogger('debug' as LogLevel, streams);
+    const logger = buildLogger('debug' as LogLevel, streams);
+    if (error !== undefined) {
+        logger.warn(error);
+    }
+    return logger;
 }
