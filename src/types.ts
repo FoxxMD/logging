@@ -1,5 +1,6 @@
-import {Level, Logger as PinoLogger, StreamEntry} from 'pino';
+import {DestinationStream, Level, Logger as PinoLogger, StreamEntry} from 'pino';
 import {ErrorWithCause} from "pony-cause";
+import {PrettyOptions} from "pino-pretty";
 
 export type LogLevel = typeof LOG_LEVELS[number];
 export const LOG_LEVELS= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
@@ -51,3 +52,6 @@ export type LogData = Record<string, any> & {
     labels: any[]
     msg: string | Error | ErrorWithCause
 }
+
+export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & {path: string};
+export type StreamDestination =  Omit<PrettyOptions, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};

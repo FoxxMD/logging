@@ -7,7 +7,7 @@ import {sleep} from "../src/util.js";
 import {LogData, LOG_LEVELS} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
-import {buildDestinationStream, buildDestinationFile} from "../src/destinations.js";
+import {buildDestinationStream, buildDestinationRollingFile} from "../src/destinations.js";
 import {buildLogger} from "../src/loggers.js";
 
 
@@ -17,8 +17,9 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
     const rawStream = new PassThrough();
     const logger = buildLogger('debug', [
         buildDestinationStream(
+            opts.console,
             {
-                stream: testStream,
+                destination: testStream,
                 colorize: false,
                 ...opts
             }
@@ -32,10 +33,12 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
 }
 
 const testFileLogger = async (config?: object) => {
-    const streamEntry = await buildDestinationFile(
+    const opts = parseLogOptions(config);
+    const streamEntry = await buildDestinationRollingFile(
+        opts.file,
         {
             path: '.',
-            ...parseLogOptions(config)
+            ...opts
         }
     );
     return buildLogger('debug', [

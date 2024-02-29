@@ -45,6 +45,7 @@
     "p-event": "^6.0.0",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
+    "ts-essentials": "^9.4.1",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "tshy": "^1.7.0",

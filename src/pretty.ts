@@ -29,7 +29,8 @@ export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
         ...opts
     }
 }
-export const prettyConsole: PrettyOptions = prettyOptsFactory()
+export const prettyConsole: PrettyOptions = prettyOptsFactory({sync: true})
 export const prettyFile: PrettyOptions = prettyOptsFactory({
     colorize: false,
+    sync: false,
 });

@@ -1,28 +1,23 @@
 import pinoRoll from 'pino-roll';
-import {LogLevelStreamEntry, LogLevel, LogOptions} from "./types.js";
-import {DestinationStream} from "pino";
+import {LogLevelStreamEntry, LogLevel, LogOptions, StreamDestination, FileDestination} from "./types.js";
+import {DestinationStream, pino} from "pino";
 import prettyDef, {PrettyOptions} from "pino-pretty";
 import {prettyConsole, prettyFile} from "./pretty.js";
-import {logPath} from "./constants.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
 import {ErrorWithCause} from "pony-cause";
 
 const pRoll = pinoRoll as unknown as typeof pinoRoll.default;
-export const buildDestinationFile = async (options: Required<LogOptions> & {
-    path?: string
-}): Promise<LogLevelStreamEntry | undefined> => {
-    const {file} = options;
-    if (file === false) {
+export const buildDestinationRollingFile = async (level: LogLevel | false, options: FileDestination): Promise<LogLevelStreamEntry | undefined> => {
+    if (level === false) {
         return undefined;
     }
-
-    const logToPath = options.path ?? logPath;
+    const {path: logPath, ...rest} = options;
 
     try {
-        fileOrDirectoryIsWriteable(logToPath);
+        fileOrDirectoryIsWriteable(logPath);
         const rollingDest = await pRoll({
-            file: path.resolve(logToPath, 'app'),
+            file: path.resolve(logPath, 'app'),
             size: 10,
             frequency: 'daily',
             get extension() {
@@ -33,19 +28,51 @@ export const buildDestinationFile = async (options: Required<LogOptions> & {
         });
 
         return {
-            level: file as LogLevel,
-            stream: prettyDef.default({...prettyFile, destination: rollingDest})
+            level: level,
+            stream: prettyDef.default({...prettyFile, ...rest, destination: rollingDest})
         };
     } catch (e: any) {
         throw new ErrorWithCause<Error>('WILL NOT write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e as Error});
     }
 }
-export const buildDestinationStream = (options: Required<LogOptions> & {
-    stream?: DestinationStream | NodeJS.WritableStream
-} & PrettyOptions): LogLevelStreamEntry => {
-    const {console, stream = 1, ...rest} = options;
+
+export const buildDestinationFile = (level: LogLevel | false, options: FileDestination): LogLevelStreamEntry | undefined => {
+    if (level === false) {
+        return undefined;
+    }
+
+    const {path: logPath, ...rest} = options;
+
+    try {
+        fileOrDirectoryIsWriteable(logPath);
+        const dest = pino.destination({dest: path, sync: false})
+
+        return {
+            level: level,
+            stream: prettyDef.default({...prettyFile, ...rest, destination: dest})
+        };
+    } catch (e: any) {
+        throw new ErrorWithCause<Error>('WILL NOT write to file due to an error while trying to access the specified directory', {cause: e as Error});
+    }
+}
+
+export const buildDestinationStream = (level: LogLevel, options: StreamDestination): LogLevelStreamEntry => {
     return {
-        level: console as LogLevel,
-        stream: prettyDef.default({...prettyConsole, ...rest, destination: stream, sync: true})
+        level: level,
+        stream: prettyDef.default({...prettyConsole, ...options})
+    }
+}
+
+export const buildDestinationStdout = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
+    return {
+        level: level,
+        stream: prettyDef.default({...prettyConsole, ...options, destination: 1})
+    }
+}
+
+export const buildDestinationStderr = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
+    return {
+        level: level,
+        stream: prettyDef.default({...prettyConsole, ...options, destination: 2})
     }
 }

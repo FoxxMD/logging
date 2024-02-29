@@ -1,7 +1,8 @@
 import {parseLogOptions} from "./funcs.js";
 import {Logger, LogLevel, LogLevelStreamEntry, LogOptions} from "./types.js";
-import {buildDestinationStream, buildDestinationFile} from "./destinations.js";
+import {buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino} from "pino";
+import {logPath} from "./constants.js";
 
 export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[]): Logger => {
     const plogger = pino({
@@ -40,14 +41,14 @@ export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context
     }
     return newChild
 }
-export const loggerTest = buildLogger('silent', [buildDestinationStream(parseLogOptions({level: 'debug'}))]);
+export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')]);
 
-export const loggerInit = buildLogger('debug', [buildDestinationStream(parseLogOptions({level: 'debug'}))]);
+export const loggerInit = buildLogger('debug', [buildDestinationStdout('debug')]);
 
 export const loggerApp = async (config: LogOptions | object = {}) => {
     const options = parseLogOptions(config);
-    const streams: LogLevelStreamEntry[] = [buildDestinationStream(options)];
-    const file = await buildDestinationFile(options);
+    const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
+    const file = await buildDestinationRollingFile(options.file, {path: logPath});
     if(file !== undefined) {
         streams.push(file);
     }
