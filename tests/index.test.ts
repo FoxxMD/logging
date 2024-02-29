@@ -5,7 +5,7 @@ import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
 import {sleep} from "../src/util.js";
-import {LogData, logLevels} from "../src/types.js";
+import {LogData, LOGLEVELS} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
 
@@ -49,7 +49,7 @@ describe('Config Parsing', function () {
     })
 
     it('does not throw when a valid level is given', function () {
-        for (const level of logLevels) {
+        for (const level of LOGLEVELS) {
             expect(() => buildParsedLogOptions({level})).to.not.throw;
         }
     })

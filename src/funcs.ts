@@ -15,7 +15,6 @@ import {
 import pinoRoll from 'pino-roll';
 import prettyDef, {PrettyOptions} from 'pino-pretty';
 import {createColors} from 'colorette';
-import * as Colorette from "colorette";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 
 const projectDir = process.cwd();

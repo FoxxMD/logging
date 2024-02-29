@@ -2,9 +2,9 @@ import {Level, Logger, StreamEntry} from 'pino';
 import {ErrorWithCause} from "pony-cause";
 
 export type AdditionalLevels = "verbose" | "log";
-export type AllLevels = Level | AdditionalLevels;
-export type LogLevel = AllLevels;
-export const logLevels: LogLevel[] = ['fatal', 'error', 'warn', 'info', 'verbose', 'debug'];
+export type AllLevels = typeof LOGLEVELS[number];
+export type LogLevel = AllLevels
+export const LOGLEVELS= ['fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as (Level | AdditionalLevels)[];
 
 export interface LogOptions {
     /**
@@ -32,13 +32,13 @@ export const asLogOptions = (obj: object = {}): obj is LogOptions => {
             return false;
         }
         if (key !== 'file') {
-            return val === undefined || logLevels.includes(val.toLocaleLowerCase());
+            return val === undefined || LOGLEVELS.includes(val.toLocaleLowerCase());
         }
-        return val === undefined || val === false || logLevels.includes(val.toLocaleLowerCase());
+        return val === undefined || val === false || LOGLEVELS.includes(val.toLocaleLowerCase());
     });
 }
 
-export type LabelledLogger = Logger<AllLevels> & {
+export type LabelledLogger = Logger<LogLevel> & {
     labels: any[]
     addLabel: (value: any) => void
 }
