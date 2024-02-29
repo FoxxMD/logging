@@ -1,21 +1,22 @@
 import {describe} from "mocha";
-import {buildParsedLogOptions, LabelledLogger, loggers} from '../src/index.js';
-import {buildPinoConsoleStream, buildPinoFileStream, buildPinoLogger, createChildLogger} from "../src/funcs.js";
+import {parseLogOptions, Logger, childLogger} from '../src/index.js';
 import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
 import {sleep} from "../src/util.js";
-import {LogData, LOGLEVELS} from "../src/types.js";
+import {LogData, LOG_LEVELS} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
+import {buildDestinationStream, buildDestinationFile} from "../src/destinations.js";
+import {buildLogger} from "../src/loggers.js";
 
 
-const testConsoleLogger = (config?: object): [LabelledLogger, Transform, Transform] => {
-    const opts = buildParsedLogOptions(config);
+const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
+    const opts = parseLogOptions(config);
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const logger = buildPinoLogger('debug', [
-        buildPinoConsoleStream(
+    const logger = buildLogger('debug', [
+        buildDestinationStream(
             {
                 stream: testStream,
                 colorize: false,
@@ -31,13 +32,13 @@ const testConsoleLogger = (config?: object): [LabelledLogger, Transform, Transfo
 }
 
 const testFileLogger = async (config?: object) => {
-    const streamEntry = await buildPinoFileStream(
+    const streamEntry = await buildDestinationFile(
         {
             path: '.',
-            ...buildParsedLogOptions(config)
+            ...parseLogOptions(config)
         }
     );
-    return buildPinoLogger('debug', [
+    return buildLogger('debug', [
         streamEntry
     ]);
 };
@@ -45,42 +46,47 @@ const testFileLogger = async (config?: object) => {
 describe('Config Parsing', function () {
 
     it('does not throw when no arg is given', function () {
-        expect(() => buildParsedLogOptions()).to.not.throw;
+        expect(() => parseLogOptions()).to.not.throw;
     })
 
     it('does not throw when a valid level is given', function () {
-        for (const level of LOGLEVELS) {
-            expect(() => buildParsedLogOptions({level})).to.not.throw;
+        for (const level of LOG_LEVELS) {
+            expect(() => parseLogOptions({level})).to.not.throw;
         }
     })
 
     it('throws when an invalid level is given', function () {
-        expect(() => buildParsedLogOptions({level: 'nah'})).to.throw;
-        expect(() => buildParsedLogOptions({file: 'nah'})).to.throw;
-        expect(() => buildParsedLogOptions({console: 'nah'})).to.throw;
+        // @ts-expect-error
+        expect(() => parseLogOptions({level: 'nah'})).to.throw;
+        // @ts-expect-error
+        expect(() => parseLogOptions({file: 'nah'})).to.throw;
+        // @ts-expect-error
+        expect(() => parseLogOptions({console: 'nah'})).to.throw;
     })
 
     it('throws when an option is not a string/boolean', function () {
-        expect(() => buildParsedLogOptions({console: {level: 'info'}})).to.throw;
+        // @ts-expect-error
+        expect(() => parseLogOptions({console: {level: 'info'}})).to.throw;
     })
 
     it('throws when file option is not a string/false', function () {
-        expect(() => buildParsedLogOptions({file: true})).to.throw;
+        // @ts-expect-error
+        expect(() => parseLogOptions({file: true})).to.throw;
     })
 
     it(`defaults to 'info' level except console`, function () {
-        const defaultConfig = buildParsedLogOptions();
+        const defaultConfig = parseLogOptions();
         expect(defaultConfig.level).eq('info')
         expect(defaultConfig.file).eq('info')
     });
 
     it(`defaults to 'debug' level for console`, function () {
-        const defaultConfig = buildParsedLogOptions();
+        const defaultConfig = parseLogOptions();
         expect(defaultConfig.console).eq('debug')
     });
 
     it(`uses level for option when given`, function () {
-        const config = buildParsedLogOptions({
+        const config = parseLogOptions({
             file: 'error',
             console: 'warn',
             level: 'debug'
@@ -144,19 +150,19 @@ describe('Child Logger', function() {
     describe('Arguments', function() {
         it('has no labels when none are provided', function() {
             const [logger] = testConsoleLogger();
-            const child = createChildLogger(logger);
+            const child = childLogger(logger);
             expect(child.labels.length).eq(0);
         });
 
         it('has labels when provided as string', function() {
             const [logger] = testConsoleLogger();
-            const child = createChildLogger(logger, 'test');
+            const child = childLogger(logger, 'test');
             expect(child.labels.length).eq(1);
         });
 
         it('has labels when provided as array', function() {
             const [logger] = testConsoleLogger();
-            const child = createChildLogger(logger, ['test','test2']);
+            const child = childLogger(logger, ['test','test2']);
             expect(child.labels.length).eq(2);
         });
     });
@@ -166,7 +172,7 @@ describe('Child Logger', function() {
             const [logger, testStream, rawStream] = testConsoleLogger();
             const formattedBuff = pEvent(testStream, 'data');
             const rawBuff = pEvent(rawStream, 'data');
-            const child = createChildLogger(logger, 'Test');
+            const child = childLogger(logger, 'Test');
             child.debug('log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();
@@ -181,7 +187,7 @@ describe('Child Logger', function() {
             const [logger, testStream, rawStream] = testConsoleLogger();
             const formattedBuff = pEvent(testStream, 'data');
             const rawBuff = pEvent(rawStream, 'data');
-            const child = createChildLogger(logger, ['Test1', 'Test2']);
+            const child = childLogger(logger, ['Test1', 'Test2']);
             child.debug('log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();
@@ -197,9 +203,9 @@ describe('Child Logger', function() {
             const [logger, testStream, rawStream] = testConsoleLogger();
             const formattedBuff = pEvent(testStream, 'data');
             const rawBuff = pEvent(rawStream, 'data');
-            const child = createChildLogger(logger, ['Test1', 'Test2']);
-            const child2 = createChildLogger(child, ['Test3', 'Test4']);
-            const child3 = createChildLogger(child2, ['Test5']);
+            const child = childLogger(logger, ['Test1', 'Test2']);
+            const child2 = childLogger(child, ['Test3', 'Test4']);
+            const child3 = childLogger(child2, ['Test5']);
             child3.debug('log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();
@@ -220,7 +226,7 @@ describe('Child Logger', function() {
             const rawBuff = pEvent(rawStream, 'data');
 
             logger.addLabel('Parent');
-            const child = createChildLogger(logger, ['Test1']);
+            const child = childLogger(logger, ['Test1']);
             logger.debug('log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();

@@ -1,6 +1,7 @@
 import pathUtil from "path";
 import {accessSync, constants} from "fs";
 import {ErrorWithCause} from "pony-cause";
+import process from "process";
 
 export const fileOrDirectoryIsWriteable = (location: string) => {
     const pathInfo = pathUtil.parse(location);
@@ -35,3 +36,5 @@ export const fileOrDirectoryIsWriteable = (location: string) => {
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export const CWD = process.cwd();

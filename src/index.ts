@@ -1,56 +1,33 @@
 import {
-    LabelledLogger,
-    AllLevels,
-    AllLevelStreamEntry,
+    Logger,
+    LogLevelStreamEntry,
     LogOptions,
-    asLogOptions,
-    LogData
+    isLogOptions,
+    LogData,
+    LogLevel,
+    LOG_LEVELS
 } from './types.js'
 
 import {
-    prettyOptsFactory,
-    prettyFile,
-    prettyConsole,
-    buildPinoLogger,
-    buildPinoConsoleStream,
-    buildPinoFileStream,
-    buildParsedLogOptions,
-    testPinoLogger,
-    initPinoLogger,
-    appPinoLogger,
-    createChildLogger,
+    parseLogOptions,
 } from './funcs.js'
 
+import {childLogger, loggerApp, loggerInit, loggerTest} from './loggers.js';
+
 export type {
-    LabelledLogger,
-    AllLevels,
-    AllLevelStreamEntry,
+    Logger,
+    LogLevelStreamEntry,
     LogOptions,
-    LogData
+    LogData,
+    LogLevel,
+    LOG_LEVELS
 }
 
 export {
-    asLogOptions,
-    buildParsedLogOptions
+    loggerApp,
+    loggerInit,
+    loggerTest,
+    childLogger,
+    parseLogOptions,
+    isLogOptions
 }
-
-export const streamBuilders = {
-    file: buildPinoFileStream,
-    console: buildPinoConsoleStream,
-}
-
-export const pretty = {
-    buildPretty: prettyOptsFactory,
-    prettyFile,
-    prettyConsole,
-};
-
-export const buildLogger = buildPinoLogger;
-
-export const loggers = {
-    init: initPinoLogger,
-    test: testPinoLogger,
-    app: appPinoLogger
-};
-
-export const childLogger = createChildLogger;

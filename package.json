@@ -23,14 +23,11 @@
     "dist"
   ],
   "tshy": {
+    "project": "./tsconfig.build.json",
     "exports": {
       "./package.json": "./package.json",
-      ".": {
-        "import": {
-          "types": "./dist/esm/index.d.ts",
-          "default": "./dist/esm/index.js"
-        }
-      }
+      ".": "./src/index.js",
+      "./factory": "./src/factory.js"
     },
     "dialects": [
       "esm"
@@ -69,6 +66,12 @@
       "import": {
         "types": "./dist/esm/index.d.ts",
         "default": "./dist/esm/index.js"
+      }
+    },
+    "./factory": {
+      "import": {
+        "types": "./dist/esm/factory.d.ts",
+        "default": "./dist/esm/factory.js"
       }
     }
   }

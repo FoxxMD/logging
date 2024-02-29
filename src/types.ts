@@ -1,10 +1,8 @@
-import {Level, Logger, StreamEntry} from 'pino';
+import {Level, Logger as PinoLogger, StreamEntry} from 'pino';
 import {ErrorWithCause} from "pony-cause";
 
-export type AdditionalLevels = "verbose" | "log";
-export type AllLevels = typeof LOGLEVELS[number];
-export type LogLevel = AllLevels
-export const LOGLEVELS= ['fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as (Level | AdditionalLevels)[];
+export type LogLevel = typeof LOG_LEVELS[number];
+export const LOG_LEVELS= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
 
 export interface LogOptions {
     /**
@@ -25,25 +23,25 @@ export interface LogOptions {
     console?: LogLevel
 }
 
-export const asLogOptions = (obj: object = {}): obj is LogOptions => {
+export const isLogOptions = (obj: object = {}): obj is LogOptions => {
     return Object.entries(obj).every(([key, val]) => {
         const t = typeof val;
         if(t !== 'string' && t !== 'boolean') {
             return false;
         }
         if (key !== 'file') {
-            return val === undefined || LOGLEVELS.includes(val.toLocaleLowerCase());
+            return val === undefined || LOG_LEVELS.includes(val.toLocaleLowerCase());
         }
-        return val === undefined || val === false || LOGLEVELS.includes(val.toLocaleLowerCase());
+        return val === undefined || val === false || LOG_LEVELS.includes(val.toLocaleLowerCase());
     });
 }
 
-export type LabelledLogger = Logger<LogLevel> & {
+export type Logger = PinoLogger<LogLevel> & {
     labels: any[]
     addLabel: (value: any) => void
 }
 
-export type AllLevelStreamEntry = StreamEntry<AllLevels>
+export type LogLevelStreamEntry = StreamEntry<LogLevel>
 
 export type LogData = Record<string, any> & {
     level: number

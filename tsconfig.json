@@ -11,7 +11,8 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "useDefineForClassFields": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "noEmit": true
   },
   "ts-node": {
     "esm": true
