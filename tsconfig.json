@@ -9,14 +9,14 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "useDefineForClassFields": true,
+    "isolatedModules": true,
+    "noEmit": true,
   },
   "ts-node": {
     "esm": true
   },
-  "typeRoots": [
-    "./src/types.d.ts"
-  ],
   "include": [
       "src/**/*"
   ],

@@ -1,0 +1,352 @@
+diff --git a/node_modules/pino-pretty/index.d.ts b/node_modules/pino-pretty/index.d.ts
+index 614d375..07dc628 100644
+--- a/node_modules/pino-pretty/index.d.ts
++++ b/node_modules/pino-pretty/index.d.ts
+@@ -10,6 +10,8 @@ import { Transform } from 'stream';
+ import { OnUnknown } from 'pino-abstract-transport';
+ // @ts-ignore fall back to any if pino is not available, i.e. when running pino tests
+ import { DestinationStream, Level } from 'pino';
++import LevelPrettifierExtras = PinoPretty.LevelPrettifierExtras;
++import * as Colorette from "colorette";
+ 
+ type LogDescriptor = Record<string, unknown>;
+ 
+@@ -179,7 +181,10 @@ interface PrettyOptions_ {
+    * }
+    * ```
+    */
+-  customPrettifiers?: Record<string, PinoPretty.Prettifier>;
++  customPrettifiers?: Record<string, PinoPretty.Prettifier> &
++    {
++      level?: PinoPretty.Prettifier<PinoPretty.LevelPrettifierExtras>
++    };
+   /**
+    * Change the level names and values to an user custom preset.
+    *
+@@ -204,8 +209,10 @@ interface PrettyOptions_ {
+ declare function build(options: PrettyOptions_): PinoPretty.PrettyStream;
+ 
+ declare namespace PinoPretty {
+-  type Prettifier = (inputData: string | object) => string;
+-  type MessageFormatFunc = (log: LogDescriptor, messageKey: string, levelLabel: string) => string;
++  type Prettifier<T = object> = (inputData: string | object, key: string, log: object, extras: PrettifierExtras<T>) => string;
++  type PrettifierExtras<T = object> = {colors: Colorette.Colorette} & T;
++  type LevelPrettifierExtras = {label: string, labelColorized: string}
++  type MessageFormatFunc = (log: LogDescriptor, messageKey: string, levelLabel: string, extras: PrettifierExtras) => string;
+   type PrettyOptions = PrettyOptions_;
+   type PrettyStream = Transform & OnUnknown;
+   type ColorizerFactory = typeof colorizerFactory;
+diff --git a/node_modules/pino-pretty/lib/colors.js b/node_modules/pino-pretty/lib/colors.js
+index 5bb3804..0896ae7 100644
+--- a/node_modules/pino-pretty/lib/colors.js
++++ b/node_modules/pino-pretty/lib/colors.js
+@@ -1,7 +1,5 @@
+ 'use strict'
+ 
+-const { LEVELS, LEVEL_NAMES } = require('./constants')
+-
+ const nocolor = input => input
+ const plain = {
+   default: nocolor,
+@@ -16,6 +14,7 @@ const plain = {
+ }
+ 
+ const { createColors } = require('colorette')
++const getLevelLabelData = require('./utils/get-level-label-data')
+ const availableColors = createColors({ useColor: true })
+ const { white, bgRed, red, yellow, green, blue, gray, cyan } = availableColors
+ 
+@@ -44,17 +43,7 @@ function resolveCustomColoredColorizer (customColors) {
+ 
+ function colorizeLevel (useOnlyCustomProps) {
+   return function (level, colorizer, { customLevels, customLevelNames } = {}) {
+-    const levels = useOnlyCustomProps ? customLevels || LEVELS : Object.assign({}, LEVELS, customLevels)
+-    const levelNames = useOnlyCustomProps ? customLevelNames || LEVEL_NAMES : Object.assign({}, LEVEL_NAMES, customLevelNames)
+-
+-    let levelNum = 'default'
+-    if (Number.isInteger(+level)) {
+-      levelNum = Object.prototype.hasOwnProperty.call(levels, level) ? level : levelNum
+-    } else {
+-      levelNum = Object.prototype.hasOwnProperty.call(levelNames, level.toLowerCase()) ? levelNames[level.toLowerCase()] : levelNum
+-    }
+-
+-    const levelStr = levels[levelNum]
++    const [levelStr, levelNum] = getLevelLabelData(useOnlyCustomProps, customLevels, customLevelNames)(level)
+ 
+     return Object.prototype.hasOwnProperty.call(colorizer, levelNum) ? colorizer[levelNum](levelStr) : colorizer.default(levelStr)
+   }
+@@ -67,6 +56,7 @@ function plainColorizer (useOnlyCustomProps) {
+   }
+   customColoredColorizer.message = plain.message
+   customColoredColorizer.greyMessage = plain.greyMessage
++  customColoredColorizer.colors = createColors({ useColor: false })
+   return customColoredColorizer
+ }
+ 
+@@ -77,6 +67,7 @@ function coloredColorizer (useOnlyCustomProps) {
+   }
+   customColoredColorizer.message = colored.message
+   customColoredColorizer.greyMessage = colored.greyMessage
++  customColoredColorizer.colors = availableColors
+   return customColoredColorizer
+ }
+ 
+@@ -105,6 +96,7 @@ function customColoredColorizerFactory (customColors, useOnlyCustomProps) {
+  * recognized.
+  * @property {function} message Accepts one string parameter that will be
+  * colorized to a predefined color.
++ * @property {Colorette.Colorette} colors Available color functions based on `useColor` (or `colorize`) context
+  */
+ 
+ /**
+diff --git a/node_modules/pino-pretty/lib/utils/get-level-label-data.js b/node_modules/pino-pretty/lib/utils/get-level-label-data.js
+new file mode 100644
+index 0000000..5b27cab
+--- /dev/null
++++ b/node_modules/pino-pretty/lib/utils/get-level-label-data.js
+@@ -0,0 +1,29 @@
++'use strict'
++
++module.exports = getLevelLabelData
++const { LEVELS, LEVEL_NAMES } = require('../constants')
++
++/**
++ * Given initial settings for custom levels/names and use of only custom props
++ * get the level label that corresponds with a given level number
++ *
++ * @param {boolean} useOnlyCustomProps
++ * @param {object} customLevels
++ * @param {object} customLevelNames
++ *
++ * @returns {function} A function that takes a number level and returns the level's label string
++ */
++function getLevelLabelData (useOnlyCustomProps, customLevels, customLevelNames) {
++  const levels = useOnlyCustomProps ? customLevels || LEVELS : Object.assign({}, LEVELS, customLevels)
++  const levelNames = useOnlyCustomProps ? customLevelNames || LEVEL_NAMES : Object.assign({}, LEVEL_NAMES, customLevelNames)
++  return function (level) {
++    let levelNum = 'default'
++    if (Number.isInteger(+level)) {
++      levelNum = Object.prototype.hasOwnProperty.call(levels, level) ? level : levelNum
++    } else {
++      levelNum = Object.prototype.hasOwnProperty.call(levelNames, level.toLowerCase()) ? levelNames[level.toLowerCase()] : levelNum
++    }
++
++    return [levels[levelNum], levelNum]
++  }
++}
+diff --git a/node_modules/pino-pretty/lib/utils/index.js b/node_modules/pino-pretty/lib/utils/index.js
+index ec69d96..e083d73 100644
+--- a/node_modules/pino-pretty/lib/utils/index.js
++++ b/node_modules/pino-pretty/lib/utils/index.js
+@@ -22,7 +22,8 @@ module.exports = {
+   prettifyMetadata: require('./prettify-metadata.js'),
+   prettifyObject: require('./prettify-object.js'),
+   prettifyTime: require('./prettify-time.js'),
+-  splitPropertyKey: require('./split-property-key.js')
++  splitPropertyKey: require('./split-property-key.js'),
++  getLevelLabelData: require('./get-level-label-data')
+ }
+ 
+ // The remainder of this file consists of jsdoc blocks that are difficult to
+@@ -78,6 +79,12 @@ module.exports = {
+  * `{levelLabel} - {if pid}{pid} - {end}url:{req.url}`
+  */
+ 
++/**
++ * @typedef {object} PrettifyMessageExtras
++ * @property {object} colors Available color functions based on `useColor` (or `colorize`) context
++ * the options.
++ */
++
+ /**
+  * A function that accepts a log object, name of the message key, and name of
+  * the level label key and returns a formatted log line.
+@@ -90,6 +97,7 @@ module.exports = {
+  * contains the log message.
+  * @param {string} levelLabel The name of the key in the `log` object that
+  * contains the log level name.
++ * @param {PrettifyMessageExtras} extras Additional data available for message context
+  * @returns {string}
+  *
+  * @example
+diff --git a/node_modules/pino-pretty/lib/utils/parse-factory-options.js b/node_modules/pino-pretty/lib/utils/parse-factory-options.js
+index 33ffb37..0b8ec74 100644
+--- a/node_modules/pino-pretty/lib/utils/parse-factory-options.js
++++ b/node_modules/pino-pretty/lib/utils/parse-factory-options.js
+@@ -8,6 +8,7 @@ const {
+ const colors = require('../colors')
+ const handleCustomLevelsOpts = require('./handle-custom-levels-opts')
+ const handleCustomLevelsNamesOpts = require('./handle-custom-levels-names-opts')
++const handleLevelLabelData = require('./get-level-label-data')
+ 
+ /**
+  * A `PrettyContext` is an object to be used by the various functions that
+@@ -32,6 +33,7 @@ const handleCustomLevelsNamesOpts = require('./handle-custom-levels-names-opts')
+  * should be considered as holding error objects.
+  * @property {string[]} errorProps A list of error object keys that should be
+  * included in the output.
++ * @property {function} getLevelLabelData Pass a numeric level to return [levelLabelString,levelNum]
+  * @property {boolean} hideObject Indicates the prettifier should omit objects
+  * in the output.
+  * @property {string[]} ignoreKeys Set of log data keys to omit.
+@@ -84,6 +86,7 @@ function parseFactoryOptions (options) {
+     : (options.useOnlyCustomProps === 'true')
+   const customLevels = handleCustomLevelsOpts(options.customLevels)
+   const customLevelNames = handleCustomLevelsNamesOpts(options.customLevels)
++  const getLevelLabelData = handleLevelLabelData(useOnlyCustomProps, customLevels, customLevelNames)
+ 
+   let customColors
+   if (options.customColors) {
+@@ -135,6 +138,7 @@ function parseFactoryOptions (options) {
+     customProperties,
+     errorLikeObjectKeys,
+     errorProps,
++    getLevelLabelData,
+     hideObject,
+     ignoreKeys,
+     includeKeys,
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-level.js b/node_modules/pino-pretty/lib/utils/prettify-level.js
+index 213ba06..2e4dce8 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-level.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-level.js
+@@ -26,10 +26,16 @@ function prettifyLevel ({ log, context }) {
+     colorizer,
+     customLevels,
+     customLevelNames,
+-    levelKey
++    levelKey,
++    getLevelLabelData
+   } = context
+   const prettifier = context.customPrettifiers?.level
+   const output = getPropertyValue(log, levelKey)
+   if (output === undefined) return undefined
+-  return prettifier ? prettifier(output) : colorizer(output, { customLevels, customLevelNames })
++  const labelColorized = colorizer(output, { customLevels, customLevelNames })
++  if (prettifier) {
++    const [label] = getLevelLabelData(output)
++    return prettifier(output, levelKey, log, { label, labelColorized, colors: colorizer.colors })
++  }
++  return labelColorized
+ }
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-level.test.js b/node_modules/pino-pretty/lib/utils/prettify-level.test.js
+index e735b0a..e6e5a3c 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-level.test.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-level.test.js
+@@ -3,6 +3,7 @@
+ const tap = require('tap')
+ const prettifyLevel = require('./prettify-level')
+ const getColorizer = require('../colors')
++const getLevelLabelData = require('./get-level-label-data')
+ const {
+   LEVEL_KEY
+ } = require('../constants')
+@@ -12,7 +13,8 @@ const context = {
+   customLevelNames: undefined,
+   customLevels: undefined,
+   levelKey: LEVEL_KEY,
+-  customPrettifiers: undefined
++  customPrettifiers: undefined,
++  getLevelLabelData: getLevelLabelData(false, {}, {})
+ }
+ 
+ tap.test('returns `undefined` for unknown level', async t => {
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-message.js b/node_modules/pino-pretty/lib/utils/prettify-message.js
+index 7758f1d..ee2f3dc 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-message.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-message.js
+@@ -54,7 +54,7 @@ function prettifyMessage ({ log, context }) {
+     return colorizer.message(message)
+   }
+   if (messageFormat && typeof messageFormat === 'function') {
+-    const msg = messageFormat(log, messageKey, levelLabel)
++    const msg = messageFormat(log, messageKey, levelLabel, { colors: colorizer.colors })
+     return colorizer.message(msg)
+   }
+   if (messageKey in log === false) return undefined
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-message.test.js b/node_modules/pino-pretty/lib/utils/prettify-message.test.js
+index 8faf4b1..291f971 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-message.test.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-message.test.js
+@@ -185,3 +185,37 @@ tap.test('`messageFormat` supports function definition', async t => {
+   })
+   t.equal(str, '--> localhost/test')
+ })
++
++tap.test('`messageFormat` supports function definition with colorizer object', async t => {
++  const colorizer = getColorizer(true)
++  const str = prettifyMessage({
++    log: { level: 30, request: { url: 'localhost/test' }, msg: 'incoming request' },
++    context: {
++      ...context,
++      colorizer,
++      messageFormat: (log, messageKey, levelLabel, { colors }) => {
++        let msg = log[messageKey]
++        if (msg === 'incoming request') msg = `--> ${colors.red(log.request.url)}`
++        return msg
++      }
++    }
++  })
++  t.equal(str, '\u001B[36m--> \u001B[31mlocalhost/test\u001B[36m\u001B[39m')
++})
++
++tap.test('`messageFormat` supports function definition with colorizer object when no color is supported', async t => {
++  const colorizer = getColorizer(false)
++  const str = prettifyMessage({
++    log: { level: 30, request: { url: 'localhost/test' }, msg: 'incoming request' },
++    context: {
++      ...context,
++      colorizer,
++      messageFormat: (log, messageKey, levelLabel, { colors }) => {
++        let msg = log[messageKey]
++        if (msg === 'incoming request') msg = `--> ${colors.red(log.request.url)}`
++        return msg
++      }
++    }
++  })
++  t.equal(str, '--> localhost/test')
++})
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-object.js b/node_modules/pino-pretty/lib/utils/prettify-object.js
+index e4bbec1..5de0f5c 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-object.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-object.js
+@@ -43,7 +43,8 @@ function prettifyObject ({
+     customPrettifiers,
+     errorLikeObjectKeys: errorLikeKeys,
+     objectColorizer,
+-    singleLine
++    singleLine,
++    colorizer
+   } = context
+   const keysToIgnore = [].concat(skipKeys)
+ 
+@@ -57,7 +58,7 @@ function prettifyObject ({
+     if (keysToIgnore.includes(k) === false) {
+       // Pre-apply custom prettifiers, because all 3 cases below will need this
+       const pretty = typeof customPrettifiers[k] === 'function'
+-        ? customPrettifiers[k](v, k, log)
++        ? customPrettifiers[k](v, k, log, { colors: colorizer.colors })
+         : v
+       if (errorLikeKeys.includes(k)) {
+         errors[k] = pretty
+diff --git a/node_modules/pino-pretty/lib/utils/prettify-object.test.js b/node_modules/pino-pretty/lib/utils/prettify-object.test.js
+index 61f6424..2dde4a9 100644
+--- a/node_modules/pino-pretty/lib/utils/prettify-object.test.js
++++ b/node_modules/pino-pretty/lib/utils/prettify-object.test.js
+@@ -6,6 +6,7 @@ const prettifyObject = require('./prettify-object')
+ const {
+   ERROR_LIKE_KEYS
+ } = require('../constants')
++const getColorizer = require('../colors')
+ 
+ const context = {
+   EOL: '\n',
+@@ -13,7 +14,8 @@ const context = {
+   customPrettifiers: {},
+   errorLikeObjectKeys: ERROR_LIKE_KEYS,
+   objectColorizer: colors(),
+-  singleLine: false
++  singleLine: false,
++  colorizer: getColorizer()
+ }
+ 
+ tap.test('returns empty string if no properties present', async t => {

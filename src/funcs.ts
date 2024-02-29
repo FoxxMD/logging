@@ -10,7 +10,7 @@ import {
 } from "./types.js";
 import {
     pino,
-    LevelWithSilentOrString,
+    LevelWithSilentOrString, DestinationStream,
 } from 'pino';
 import pinoRoll from 'pino-roll';
 import prettyDef, {PrettyOptions} from 'pino-pretty';
@@ -37,14 +37,14 @@ export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
     const colors = createColors(colorizeOpts)
 
     return {
-        ...prettyCommon(colors),
+        ...prettyCommon(),
         ...opts
     }
 }
 
-export const prettyCommon = (colors: Colorette.Colorette): PrettyOptions => {
+export const prettyCommon = (): PrettyOptions => {
     return {
-        messageFormat: (log, messageKey) => {
+        messageFormat: (log, messageKey, levelLabel, { colors }) => {
             const labels: string[] = log.labels as string[] ?? [];
             const leaf = log.leaf as string | undefined;
             const nodes = labels;
@@ -75,7 +75,7 @@ export const prettyFile: PrettyOptions = prettyOptsFactory({
     colorize: false,
 });
 
-const buildParsedLogOptions = (config: object = {}): Required<LogOptions> => {
+export const buildParsedLogOptions = (config: object = {}): Required<LogOptions> => {
     if (!asLogOptions(config)) {
         throw new Error(`Logging levels were not valid. Must be one of: 'error', 'warn', 'info', 'verbose', 'debug', 'silent' -- 'file' may be false.`)
     }
@@ -96,16 +96,18 @@ const buildParsedLogOptions = (config: object = {}): Required<LogOptions> => {
     };
 }
 
-export const buildPinoFileStream = async (options: Required<LogOptions>): Promise<AllLevelStreamEntry | undefined> => {
+export const buildPinoFileStream = async (options: Required<LogOptions> & { path?: string }): Promise<AllLevelStreamEntry | undefined> => {
     const {file} = options;
     if(file === false) {
         return undefined;
     }
 
+    const logToPath = options.path ?? logPath;
+
     try {
-        fileOrDirectoryIsWriteable(logPath);
+        fileOrDirectoryIsWriteable(logToPath);
         const rollingDest = await pRoll({
-            file: path.resolve(logPath, 'app'),
+            file: path.resolve(logToPath, 'app'),
             size: 10,
             frequency: 'daily',
             get extension() {return `-${new Date().toISOString().split('T')[0]}.log`},
@@ -122,10 +124,11 @@ export const buildPinoFileStream = async (options: Required<LogOptions>): Promis
     }
 }
 
-export const buildPinoConsoleStream = (options: Required<LogOptions>): AllLevelStreamEntry => {
+export const buildPinoConsoleStream = (options: Required<LogOptions> & {stream?: DestinationStream | NodeJS.WritableStream} & PrettyOptions): AllLevelStreamEntry => {
+    const {console, stream = 1, ...rest} = options;
     return {
-        level: options.console as LogLevel,
-        stream: prettyDef.default({...prettyConsole, destination: 1, sync: true})
+        level: console as LogLevel,
+        stream: prettyDef.default({...prettyConsole, ...rest, destination: stream, sync: true})
     }
 }
 
@@ -144,6 +147,7 @@ export const buildPinoLogger = (defaultLevel: LevelWithSilentOrString, streams: 
         },
         useOnlyCustomLevels: false,
     }, pino.multistream(streams)) as LabelledLogger;
+    plogger.labels = [];
 
     plogger.addLabel = function (value) {
         if (this.labels === undefined) {

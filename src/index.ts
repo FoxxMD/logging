@@ -3,7 +3,8 @@ import {
     AllLevels,
     AllLevelStreamEntry,
     LogOptions,
-    asLogOptions
+    asLogOptions,
+    LogData
 } from './types.js'
 
 import {
@@ -13,18 +14,24 @@ import {
     buildPinoLogger,
     buildPinoConsoleStream,
     buildPinoFileStream,
+    buildParsedLogOptions,
     testPinoLogger,
     initPinoLogger,
     appPinoLogger,
     createChildLogger,
 } from './funcs.js'
 
-export {
+export type {
     LabelledLogger,
     AllLevels,
     AllLevelStreamEntry,
     LogOptions,
-    asLogOptions
+    LogData
+}
+
+export {
+    asLogOptions,
+    buildParsedLogOptions
 }
 
 export const streamBuilders = {
