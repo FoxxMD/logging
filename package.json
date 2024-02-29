@@ -8,7 +8,8 @@
     "typedoc": "typedoc",
     "build": "tsc",
     "prepare": "tshy",
-    "test": "mocha --recursive ./tests/*.test.ts"
+    "test": "mocha --recursive ./tests/*.test.ts",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "FoxxMD",
