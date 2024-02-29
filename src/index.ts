@@ -12,7 +12,7 @@ import {
     parseLogOptions,
 } from './funcs.js'
 
-import {childLogger, loggerApp, loggerInit, loggerTest} from './loggers.js';
+import {childLogger, loggerApp, loggerDebug, loggerTest, loggerAppRolling} from './loggers.js';
 
 export type {
     Logger,
@@ -25,7 +25,8 @@ export type {
 
 export {
     loggerApp,
-    loggerInit,
+    loggerAppRolling,
+    loggerDebug,
     loggerTest,
     childLogger,
     parseLogOptions,
