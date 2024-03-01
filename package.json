@@ -1,14 +1,14 @@
 {
   "name": "@foxxmd/logging",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "repository": "https://github.com/foxxmd/logging",
   "description": "",
   "scripts": {
     "typedoc": "typedoc",
     "build": "tsc",
     "prepare": "tshy",
-    "test": "mocha --recursive ./tests/*.test.ts",
+    "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
     "postinstall": "patch-package"
   },
   "keywords": [],
@@ -60,6 +60,13 @@
     "pino-roll": "^1.0.0-rc.1",
     "pony-cause": "^2.1.10",
     "tsx": "^4.7.0"
+  },
+  "overrides": {
+    "with-local-tmp-dir": {
+      "tmp-promise": {
+        "tmp": "0.2.1"
+      }
+    }
   },
   "exports": {
     "./package.json": "./package.json",
