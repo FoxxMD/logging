@@ -1,6 +1,6 @@
 import pinoRoll from 'pino-roll';
 import {LogLevelStreamEntry, LogLevel, LogOptions, StreamDestination, FileDestination} from "./types.js";
-import {DestinationStream, pino} from "pino";
+import {DestinationStream, pino, destination} from "pino";
 import prettyDef, {PrettyOptions} from "pino-pretty";
 import {prettyConsole, prettyFile} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
@@ -45,7 +45,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 
     try {
         fileOrDirectoryIsWriteable(logPath);
-        const dest = pino.destination({dest: path, sync: false})
+        const dest = destination({dest: logPath, mkdir: true, sync: false})
 
         return {
             level: level,
@@ -64,15 +64,16 @@ export const buildDestinationStream = (level: LogLevel, options: StreamDestinati
 }
 
 export const buildDestinationStdout = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
+    const opts = {...prettyConsole, ...options, destination: destination({dest: 1, sync: true})}
     return {
         level: level,
-        stream: prettyDef.default({...prettyConsole, ...options, destination: 1})
+        stream: prettyDef.default(opts)
     }
 }
 
 export const buildDestinationStderr = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
     return {
         level: level,
-        stream: prettyDef.default({...prettyConsole, ...options, destination: 2})
+        stream: prettyDef.default({...prettyConsole, ...options, destination: destination({dest: 2, sync: true})})
     }
 }
