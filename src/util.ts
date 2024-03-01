@@ -12,18 +12,31 @@ export const fileOrDirectoryIsWriteable = (location: string) => {
     } catch (err: any) {
         const {code} = err;
         if (code === 'ENOENT') {
-            // file doesn't exist, see if we can write to directory in which case we are good
-            try {
-                accessSync(pathInfo.dir, constants.R_OK | constants.W_OK)
-                // we can write to dir
-                return true;
-            } catch (accessError: any) {
-                if (accessError.code === 'EACCES') {
-                    // also can't access directory :(
-                    throw new Error(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application does not have permission to write to the parent directory`);
-                } else {
-                    throw new ErrorWithCause(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application is unable to access the parent directory due to a system error`, {cause: accessError});
+            // walk up path and see if we can access parent directories
+            let currPath = pathInfo;
+            let parentOK = false;
+            let accessError = null;
+            while(currPath.dir !== '') {
+                try {
+                    accessSync(currPath.dir, constants.R_OK | constants.W_OK);
+                    parentOK = true;
+                    break;
+                } catch (e) {
+                    if (code !== 'ENOENT') {
+                        break;
+                        accessError = e;
+                    }
                 }
+                currPath = pathUtil.parse(currPath.dir);
+            }
+            if(parentOK) {
+                return true;
+            }
+            if (accessError.code === 'EACCES') {
+                // also can't access directory :(
+                throw new Error(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application does not have permission to write to the parent directory`);
+            } else {
+                throw new ErrorWithCause(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application is unable to access the parent directory due to a system error`, {cause: accessError});
             }
         } else if (code === 'EACCES') {
             throw new Error(`${isDir ? 'Directory' : 'File'} exists at ${location} but application does not have permission to write to it.`);
