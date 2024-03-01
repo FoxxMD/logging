@@ -10,3 +10,4 @@ node_modules/
 .tshy
 .tshy-build-tmp
 dist
+tmp-*
