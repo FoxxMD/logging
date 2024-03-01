@@ -12,13 +12,17 @@
     "allowSyntheticDefaultImports": true,
     "useDefineForClassFields": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "typeRoots": [
+      "tests/types"
+    ]
   },
   "ts-node": {
     "esm": true
   },
   "include": [
-      "src/**/*"
+      "src/**/*",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules"
