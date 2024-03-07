@@ -42,8 +42,19 @@ export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context
     }
     return newChild
 }
+/**
+ * A noop (no output) logger for use when testing a component that requires a Logger
+ *
+ * @source
+ * */
 export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')]);
 
+
+/**
+ * A logger that ONLY logs to console at minimum 'debug' level. Useful for logging during startup before a loggerApp has been initialized
+ *
+ * @source
+ * */
 export const loggerDebug = buildLogger('debug', [buildDestinationStdout('debug')]);
 
 export const loggerApp = (config: LogOptions | object = {}) => {

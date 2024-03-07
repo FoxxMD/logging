@@ -29,7 +29,17 @@ export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
         ...opts
     }
 }
+/**
+ * Pre-defined pretty options for use with console/stream output
+ *
+ * @source
+ * */
 export const prettyConsole: PrettyOptions = prettyOptsFactory({sync: true})
+/**
+ * Pre-defined pretty options for use with file output
+ *
+ * @source
+ * */
 export const prettyFile: PrettyOptions = prettyOptsFactory({
     colorize: false,
     sync: false,
