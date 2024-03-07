@@ -20,10 +20,8 @@ Features:
   * Add or use your own streams for destinations
   * All pino-pretty configs are exposed and extensible
 
-<img src="/assets/example.png"
-alt="log output example">
-<img src="media://example.png"
-alt="log output example">
+<img src="/assets/example.png">
+<img src="media://example.png">
 
 # Install
 
