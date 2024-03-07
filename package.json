@@ -9,7 +9,8 @@
     "build": "tsc",
     "prepare": "tshy",
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "example": "tsx example/kitchenSink.ts"
   },
   "keywords": [],
   "author": "FoxxMD",

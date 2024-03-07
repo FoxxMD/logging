@@ -20,6 +20,9 @@ Features:
   * Add or use your own streams for destinations
   * All pino-pretty configs are exposed and extensible
 
+<img src="/example/example.png"
+alt="log output example" height="500">
+
 # Install
 
 ```
@@ -225,7 +228,7 @@ import {
     buildDestinationStdout,     // stream to STDOUT
     buildDestinationStderr,     // stream to STDERR
     buildDestinationFile,       // write to static file
-    buildDestinationRollingFile // write to rolling
+    buildDestinationRollingFile // write to rolling file
 } from "@foxxmd/logging/factory";
 ```
 
@@ -234,7 +237,7 @@ All `buildDestination` functions take args:
 * `level` (first arg) - minimum level to log at
 * `options` (second arg) - an object extending [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options)
 
-`options` inherits a default `pino-pretty` configuration that makes comprises `@foxxmd/logging`'s opinionated logging format. The common default config can be generated using `prettyOptsFactory` which accepts an optional [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options) object to override defaults:
+`options` inherits a default `pino-pretty` configuration that comprises `@foxxmd/logging`'s opinionated logging format. The common default config can be generated using `prettyOptsFactory` which accepts an optional [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options) object to override defaults:
 
 ```ts
 import { prettyOptsFactory } from "@foxxmd/logging/factory";
