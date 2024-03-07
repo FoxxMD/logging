@@ -11,8 +11,8 @@ export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
                 nodes.push(leaf);
             }
             const labelContent = nodes.length === 0 ? '' : `${nodes.map((x: string) => colors.blackBright(`[${x}]`)).join(' ')} `;
-            const msg = log[messageKey];
-            const stackTrace = log.err !== undefined ? `\n${(log.err as any).stack.replace(CWD, 'CWD')}` : '';
+            const msg = (log[messageKey] as string).replaceAll(CWD, 'CWD');
+            const stackTrace = log.err !== undefined ? `\n${(log.err as any).stack.replaceAll(CWD, 'CWD')}` : '';
             return `${labelContent}${msg}${stackTrace}`;
         },
         hideObject: false,
