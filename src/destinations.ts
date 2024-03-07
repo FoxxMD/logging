@@ -1,5 +1,10 @@
 import pinoRoll from 'pino-roll';
-import {LogLevelStreamEntry, LogLevel, LogOptions, StreamDestination, FileDestination} from "./types.js";
+import {
+    LogLevelStreamEntry,
+    LogLevel,
+    StreamDestination,
+    FileDestination,
+} from "./types.js";
 import {DestinationStream, pino, destination} from "pino";
 import prettyDef, {PrettyOptions} from "pino-pretty";
 import {prettyConsole, prettyFile} from "./pretty.js";
@@ -12,35 +17,60 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
     if (level === false) {
         return undefined;
     }
-    const {path: logPath, ...rest} = options;
+    const {
+        path: logPath,
+        size,
+        frequency,
+        timestamp = 'auto',
+        ...rest
+    } = options;
+
+    if(size === undefined && frequency === undefined) {
+        throw new Error(`For rolling files must specify at least one of 'frequency' , 'size'`);
+    }
+
+    const testPath = typeof logPath === 'function' ? logPath() : logPath;
 
     try {
-        const testPath = typeof logPath === 'function' ? logPath() : logPath;
         fileOrDirectoryIsWriteable(testPath);
-
-        const pInfo = path.parse(testPath);
-        let filePath: string | (() => string);
-        if(typeof logPath === 'string') {
-            filePath = () => path.resolve(pInfo.dir, `${pInfo.name}-${new Date().toISOString().split('T')[0]}`)
-        } else {
-            filePath = logPath;
-        }
-        const rollingDest = await pRoll({
-            file: filePath,
-            size: 10,
-            frequency: 'daily',
-            extension: pInfo.ext,
-            mkdir: true,
-            sync: false,
-        });
-
-        return {
-            level: level,
-            stream: prettyDef.default({...prettyFile, ...rest, destination: rollingDest})
-        };
-    } catch (e: any) {
-        throw new ErrorWithCause<Error>('WILL NOT write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e as Error});
+    }  catch (e: any) {
+        throw new ErrorWithCause<Error>('Cannot write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e as Error});
     }
+
+    const pInfo = path.parse(testPath);
+    let filePath: string | (() => string);
+    if(typeof logPath === 'string' && frequency !== undefined) {
+        filePath = () => {
+            let dtStr: string;
+            switch(timestamp) {
+                case 'unix':
+                    dtStr = Date.now().toString();
+                    break;
+                case 'iso':
+                    dtStr = new Date().toISOString();
+                    break;
+                case 'auto':
+                    dtStr = frequency === 'daily' ? new Date().toISOString().split('T')[0] : new Date().toISOString();
+                    break;
+            }
+            return path.resolve(pInfo.dir, `${pInfo.name}-${dtStr}`)
+        }
+    } else {
+        filePath = path.resolve(pInfo.dir, pInfo.name);
+    }
+    const rollingDest = await pRoll({
+        file: filePath,
+        size,
+        frequency,
+        extension: pInfo.ext,
+        mkdir: true,
+        sync: false,
+    });
+
+    return {
+        level: level,
+        stream: prettyDef.default({...prettyFile, ...rest, destination: rollingDest})
+    };
 }
 
 export const buildDestinationFile = (level: LogLevel | false, options: FileDestination): LogLevelStreamEntry | undefined => {

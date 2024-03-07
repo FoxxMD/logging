@@ -37,8 +37,9 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
 const testFileRollingLogger = async (config?: object, logPath: string = '.') => {
     const opts = parseLogOptions(config);
     const streamEntry = await buildDestinationRollingFile(
-        opts.file,
+        opts.file.level,
         {
+            frequency: 'daily',
             path: logPath,
             ...opts
         }
@@ -51,7 +52,7 @@ const testFileRollingLogger = async (config?: object, logPath: string = '.') => 
 const testFileLogger = async (config?: object, logPath: string = './app.log') => {
     const opts = parseLogOptions(config);
     const streamEntry = buildDestinationFile(
-        opts.file,
+        opts.file.level,
         {
             path: logPath,
             ...opts
@@ -67,8 +68,9 @@ const testRollingAppLogger = async (config?: object, logPath: string = '.'): Pro
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streamEntry = await buildDestinationRollingFile(
-        opts.file,
+        opts.file.level,
         {
+            frequency: 'daily',
             path: logPath,
             ...opts
         }
@@ -97,7 +99,7 @@ const testAppLogger = (config?: object, logPath: string = '.'): [Logger, Transfo
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streamEntry = buildDestinationFile(
-        opts.file,
+        opts.file.level,
         {
             path: logPath,
             ...opts
@@ -156,7 +158,7 @@ describe('Config Parsing', function () {
     it(`defaults to 'info' level except console`, function () {
         const defaultConfig = parseLogOptions();
         expect(defaultConfig.level).eq('info')
-        expect(defaultConfig.file).eq('info')
+        expect(defaultConfig.file.level).eq('info')
     });
 
     it(`defaults to 'debug' level for console`, function () {
@@ -171,7 +173,7 @@ describe('Config Parsing', function () {
             level: 'debug'
         });
         expect(config.console).eq('warn')
-        expect(config.file).eq('error')
+        expect(config.file.level).eq('error')
     });
 })
 

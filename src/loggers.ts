@@ -2,8 +2,6 @@ import {parseLogOptions} from "./funcs.js";
 import {Logger, LogLevel, LogLevelStreamEntry, LogOptions} from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino} from "pino";
-import {logPath} from "./constants.js";
-import path from "path";
 
 export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[]): Logger => {
     const plogger = pino({
@@ -62,14 +60,17 @@ export const loggerApp = (config: LogOptions | object = {}) => {
     const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
 
     let error: Error;
-    try {
-        const file = buildDestinationFile(options.file, {path: options.filePath, append: true});
-        if (file !== undefined) {
-            streams.push(file);
+    if(options.file.level !== false) {
+        try {
+            const file = buildDestinationFile(options.file.level, {...options.file, append: true});
+            if (file !== undefined) {
+                streams.push(file);
+            }
+        } catch (e) {
+            error = e;
         }
-    } catch (e) {
-        error = e;
     }
+
     const logger = buildLogger('debug' as LogLevel, streams);
     if (error !== undefined) {
         logger.warn(error);
@@ -82,13 +83,15 @@ export const loggerAppRolling = async (config: LogOptions | object = {}) => {
     const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
 
     let error: Error;
-    try {
-        const file = await buildDestinationRollingFile(options.file, {path: logPath});
-        if (file !== undefined) {
-            streams.push(file);
+    if(options.file.level !== false) {
+        try {
+            const file = await buildDestinationRollingFile(options.file.level, options.file);
+            if (file !== undefined) {
+                streams.push(file);
+            }
+        } catch (e) {
+            error = e;
         }
-    } catch (e) {
-        error = e;
     }
     const logger = buildLogger('debug' as LogLevel, streams);
     if (error !== undefined) {

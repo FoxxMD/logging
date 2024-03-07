@@ -2,6 +2,7 @@ import {
     Logger,
     LogLevelStreamEntry,
     LogOptions,
+    FileLogOptions,
     isLogOptions,
     LogData,
     LogLevel,
@@ -15,6 +16,7 @@ import {
 import {childLogger, loggerApp, loggerDebug, loggerTest, loggerAppRolling} from './loggers.js';
 
 export type {
+    FileLogOptions,
     Logger,
     LogLevelStreamEntry,
     LogOptions,

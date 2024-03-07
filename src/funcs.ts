@@ -1,9 +1,10 @@
 import process from "process";
-import {isLogOptions, LogLevel, LogOptions} from "./types.js";
+import {FileLogOptions, FileLogOptionsParsed, isLogOptions, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
 import {logPath, projectDir} from "./constants.js";
 import {isAbsolute, resolve} from 'node:path';
+import {MarkRequired} from "ts-essentials";
 
-export const parseLogOptions = (config: LogOptions = {}): Required<LogOptions> => {
+export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
     if (!isLogOptions(config)) {
         throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug',  -- 'file' may be false.`)
     }
@@ -15,14 +16,38 @@ export const parseLogOptions = (config: LogOptions = {}): Required<LogOptions> =
         level = configLevel || defaultLevel,
         file = configLevel || defaultLevel,
         console = configLevel || 'debug',
-        filePath
     } = config;
+
+    let fileObj: FileLogOptionsParsed;
+    if (typeof file === 'object') {
+        if (file.level === false) {
+            fileObj = {level: false};
+        } else {
+            const path = typeof file.path === 'function' ? file.path : getLogPath(file.path);
+            fileObj = {
+                level: configLevel || defaultLevel,
+                ...file,
+                path
+            }
+        }
+    } else if (file === false) {
+        fileObj = {level: false};
+    } else {
+        fileObj = {
+            level: file,
+            path: getLogPath()
+        };
+    }
+
+    if(fileObj.level !== false && fileObj.frequency === undefined && fileObj.size === undefined) {
+        // set default rolling log behavior
+        fileObj.frequency = 'daily';
+    }
 
     return {
         level,
-        file: file as LogLevel | false,
+        file: fileObj,
         console,
-        filePath: typeof filePath === 'function' ? filePath : getLogPath(filePath)
     };
 }
 
