@@ -19,6 +19,16 @@ export interface LogOptions {
      * */
     file?: LogLevel | false
     /**
+     * The full path and filename to use for log files
+     *
+     * If using rolling files the filename will be appended with `.N` (a number) BEFORE the extension based on rolling status
+     *
+     * May also be specified using env LOG_PATH or a function that returns a string
+     *
+     * @default 'CWD/logs/app.log
+     * */
+    filePath?: string | (() => string)
+    /**
      * Specify the minimum log level streamed to the console (or docker container)
      * */
     console?: LogLevel
@@ -26,14 +36,20 @@ export interface LogOptions {
 
 export const isLogOptions = (obj: object = {}): obj is LogOptions => {
     return Object.entries(obj).every(([key, val]) => {
+        if(val === undefined) {
+            return true;
+        }
         const t = typeof val;
+        if(key === 'filePath') {
+            return t === 'string' || t === 'function';
+        }
         if(t !== 'string' && t !== 'boolean') {
             return false;
         }
         if (key !== 'file') {
-            return val === undefined || LOG_LEVELS.includes(val.toLocaleLowerCase());
+            return LOG_LEVELS.includes(val.toLocaleLowerCase());
         }
-        return val === undefined || val === false || LOG_LEVELS.includes(val.toLocaleLowerCase());
+        return val === false || LOG_LEVELS.includes(val.toLocaleLowerCase());
     });
 }
 
@@ -53,5 +69,5 @@ export type LogData = Record<string, any> & {
     msg: string | Error | ErrorWithCause
 }
 
-export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & {path: string};
+export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & {path: string | (() => string)};
 export type StreamDestination =  Omit<PrettyOptions, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};

@@ -52,7 +52,7 @@ export const loggerApp = (config: LogOptions | object = {}) => {
 
     let error: Error;
     try {
-        const file = buildDestinationFile(options.file, {path: path.resolve(logPath, 'app.log'), append: true});
+        const file = buildDestinationFile(options.file, {path: options.filePath, append: true});
         if (file !== undefined) {
             streams.push(file);
         }

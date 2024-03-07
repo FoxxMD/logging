@@ -1,58 +1,60 @@
 diff --git a/node_modules/pino-roll/lib/utils.js b/node_modules/pino-roll/lib/utils.js
-index c84cd8f..228e03e 100644
+index c84cd8f..0be7f5e 100644
 --- a/node_modules/pino-roll/lib/utils.js
 +++ b/node_modules/pino-roll/lib/utils.js
-@@ -62,11 +62,11 @@ function getNext (frequency) {
+@@ -62,14 +62,19 @@ function getNext (frequency) {
    return getNextCustom(frequency)
  }
  
 -function buildFileName (fileName, lastNumber = 1, extension) {
-+function buildFileName (fileName, lastNumber = 1, extension, prefix) {
-   if (!fileName) {
+-  if (!fileName) {
++function getFileName (fileVal) {
++  if (!fileVal) {
      throw new Error('No file name provided')
    }
 -  return `${fileName}.${lastNumber}${extension ?? ''}`
-+  return `${fileName}${prefix ?? ''}.${lastNumber}${extension ?? ''}`
++  return typeof fileVal === 'function' ? fileVal() : fileVal
  }
  
- async function detectLastNumber (fileName, time = null) {
+-async function detectLastNumber (fileName, time = null) {
++function buildFileName (fileVal, lastNumber = 1, extension) {
++  return `${getFileName(fileVal)}.${lastNumber}${extension ?? ''}`
++}
++
++async function detectLastNumber (fileVal, time = null) {
++  const fileName = getFileName(fileVal)
+   try {
+     const numbers = await readFileTrailingNumbers(dirname(fileName), time)
+     return numbers.sort((a, b) => b - a)[0]
+@@ -102,4 +107,4 @@ async function isMatchingTime (filePath, time) {
+   return birthtimeMs >= time
+ }
+ 
+-module.exports = { buildFileName, detectLastNumber, parseFrequency, getNext, parseSize }
++module.exports = { buildFileName, detectLastNumber, parseFrequency, getNext, parseSize, getFileName }
 diff --git a/node_modules/pino-roll/pino-roll.js b/node_modules/pino-roll/pino-roll.js
-index 800d59f..798dca3 100644
+index 800d59f..68c42e9 100644
 --- a/node_modules/pino-roll/pino-roll.js
 +++ b/node_modules/pino-roll/pino-roll.js
-@@ -25,6 +25,8 @@ const { buildFileName, detectLastNumber, parseSize, parseFrequency, getNext } =
-  * Using a numerical value will always create a new file upon startup.
-  *
-  * @property {string} extension? - When specified, appends a file extension after the file number.
+@@ -3,12 +3,19 @@
+ const SonicBoom = require('sonic-boom')
+ const { buildFileName, detectLastNumber, parseSize, parseFrequency, getNext } = require('./lib/utils')
+ 
++/**
++ * A function that returns a string path to the base file name
 + *
-+ * @property {string} prefix? - When specified, is appended to file name before file number.
-  */
- 
++ * @typedef {function} LogFilePath
++ * @returns {string}
++ */
++
  /**
-@@ -38,7 +40,7 @@ const { buildFileName, detectLastNumber, parseSize, parseFrequency, getNext } =
-  * @param {PinoRollOptions} options - to configure file destionation, and rolling rules.
-  * @returns {SonicBoom} the Sonic boom steam, usabled as Pino transport.
-  */
--module.exports = async function ({ file, size, frequency, extension, ...opts } = {}) {
-+module.exports = async function ({ file, size, frequency, extension, prefix, ...opts } = {}) {
-   const frequencySpec = parseFrequency(frequency)
- 
-   let number = await detectLastNumber(file, frequencySpec?.start)
-@@ -46,7 +48,7 @@ module.exports = async function ({ file, size, frequency, extension, ...opts } =
-   let currentSize = 0
-   const maxSize = parseSize(size)
- 
--  const destination = new SonicBoom({ ...opts, dest: buildFileName(file, number, extension) })
-+  const destination = new SonicBoom({ ...opts, dest: buildFileName(file, number, extension, prefix) })
- 
-   let rollTimeout
-   if (frequencySpec) {
-@@ -68,7 +70,7 @@ module.exports = async function ({ file, size, frequency, extension, ...opts } =
-   }
- 
-   function roll () {
--    destination.reopen(buildFileName(file, ++number, extension))
-+    destination.reopen(buildFileName(file, ++number, extension, prefix))
-   }
- 
-   function scheduleRoll () {
+  * @typedef {object} Options
+  *
+- * @property {string} file - Absolute or relative path to the log file.
++ * @property {string|LogFilePath} file - Absolute or relative path to the log file.
+  * Your application needs the write right on the parent folder.
+- * Number will be appened to this file name.
++ * Number will be appended to this file name.
+  * When the parent folder already contains numbered files, numbering will continue based on the highest number.
+  * If this path does not exist, the logger with throw an error unless you set `mkdir` to `true`.
+  *

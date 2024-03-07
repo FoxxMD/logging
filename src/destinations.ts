@@ -15,14 +15,21 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
     const {path: logPath, ...rest} = options;
 
     try {
-        fileOrDirectoryIsWriteable(logPath);
+        const testPath = typeof logPath === 'function' ? logPath() : logPath;
+        fileOrDirectoryIsWriteable(testPath);
+
+        const pInfo = path.parse(testPath);
+        let filePath: string | (() => string);
+        if(typeof logPath === 'string') {
+            filePath = () => path.resolve(pInfo.dir, `${pInfo.name}-${new Date().toISOString().split('T')[0]}`)
+        } else {
+            filePath = logPath;
+        }
         const rollingDest = await pRoll({
-            file: path.resolve(logPath, 'app'),
+            file: filePath,
             size: 10,
             frequency: 'daily',
-            get extension() {
-                return `-${new Date().toISOString().split('T')[0]}.log`
-            },
+            extension: pInfo.ext,
             mkdir: true,
             sync: false,
         });
@@ -41,11 +48,12 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
         return undefined;
     }
 
-    const {path: logPath, ...rest} = options;
+    const {path: logPathVal, ...rest} = options;
 
     try {
-        fileOrDirectoryIsWriteable(logPath);
-        const dest = destination({dest: logPath, mkdir: true, sync: false})
+        const filePath = typeof logPathVal === 'function' ? logPathVal() : logPathVal;
+        fileOrDirectoryIsWriteable(filePath);
+        const dest = destination({dest: filePath, mkdir: true, sync: false})
 
         return {
             level: level,

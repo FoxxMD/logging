@@ -247,7 +247,7 @@ describe('Transports', function () {
     describe('Combined', function() {
         it('It writes to rolling file and console', async function () {
             await withLocalTmpDir(async () => {
-                const logPath = './logs';
+                const logPath = './logs/app.log';
                 const [logger, testStream, rawStream] = await testRollingAppLogger({file: 'debug'}, logPath);
                 const race = Promise.race([
                     pEvent(testStream, 'data'),
@@ -258,9 +258,9 @@ describe('Transports', function () {
                 const res = await race;
                 expect(res).to.not.be.undefined;
                 expect(res.toString()).to.include('DEBUG: Test');
-                const paths = readdirSync(logPath);
+                const paths = readdirSync('./logs');
                 expect(paths.length).eq(1);
-                const fileContents = readFileSync(path.resolve(logPath, paths[0])).toString();
+                const fileContents = readFileSync(path.resolve('./logs', paths[0])).toString();
                 expect(fileContents).includes('DEBUG: Test');
             }, {unsafeCleanup: true});
         });
