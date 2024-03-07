@@ -5,7 +5,7 @@
   "repository": "https://github.com/foxxmd/logging",
   "description": "",
   "scripts": {
-    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --media ./assets",
+    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --media ./assets",
     "build": "tsc",
     "prepare": "tshy",
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
@@ -52,6 +52,7 @@
     "tshy": "^1.7.0",
     "typedoc": "^0.25.11",
     "typedoc-plugin-missing-exports": "^2.2.0",
+    "typedoc-plugin-replace-text": "^3.3.0",
     "typescript": "^5.3.3",
     "with-local-tmp-dir": "^5.0.1",
     "yaml": "^2.3.4"
