@@ -2,7 +2,8 @@
   "$schema": "https://typedoc.org/schema.json",
   "name": "@foxxmd/logging Docs",
   "entryPoints": [
-    "./src/index.ts"
+    "./src/index.ts",
+    "./src/factory.ts"
   ],
   "sort": ["source-order"],
   "categorizeByGroup": false,
