@@ -20,7 +20,7 @@ jobs:
       - run: npm run build
 
       - name: Create the docs directory locally in CI
-        run: npx typedoc
+        run: npm run typedoc
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.4

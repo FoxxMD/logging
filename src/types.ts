@@ -25,7 +25,7 @@ export interface LogOptions {
      *
      * May also be specified using env LOG_PATH or a function that returns a string
      *
-     * @default 'CWD/logs/app.log
+     * @default 'CWD/logs/app.log'
      * */
     filePath?: string | (() => string)
     /**
