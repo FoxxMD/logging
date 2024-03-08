@@ -1,5 +1,12 @@
 import {parseLogOptions} from "./funcs.js";
-import {Logger, LoggerAppExtras, LogLevel, LogLevelStreamEntry, LogOptions} from "./types.js";
+import {
+    CUSTOM_LEVELS,
+    Logger,
+    LoggerAppExtras,
+    LogLevel,
+    LogLevelStreamEntry,
+    LogOptions
+} from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino} from "pino";
 
@@ -11,7 +18,10 @@ import {pino} from "pino";
  * @see Logger
  * */
 export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[]): Logger => {
-    const plogger = pino({
+    // TODO maybe implement custom levels
+    //const { levels = {} } = extras;
+
+    const plogger = pino<"verbose" | "log">({
         // @ts-ignore
         mixin: (obj, num, loggerThis) => {
             return {
@@ -28,10 +38,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
             return finalObj;
         },
         level: defaultLevel,
-        customLevels: {
-            verbose: 25,
-            log: 21
-        },
+        customLevels: CUSTOM_LEVELS,
         useOnlyCustomLevels: false,
     }, pino.multistream(streams)) as Logger;
     plogger.labels = [];

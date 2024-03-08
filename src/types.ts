@@ -1,4 +1,4 @@
-import {DestinationStream, Level, Logger as PinoLogger, StreamEntry} from 'pino';
+import {DestinationStream, Level, Logger as PinoLogger, LoggerOptions, StreamEntry} from 'pino';
 import {ErrorWithCause} from "pony-cause";
 import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
@@ -170,4 +170,14 @@ export interface LoggerAppExtras {
      * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other [Pino Transports](https://getpino.io/#/docs/transports?id=known-transports)
      * */
     destinations?: LogLevelStreamEntry[]
+}
+
+/**
+ * Additional levels included in @foxxmd/logging as an object
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
+    verbose: 25,
+    log: 21
 }

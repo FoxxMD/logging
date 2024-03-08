@@ -1,21 +1,19 @@
 import {PrettyOptions} from "pino-pretty";
 import {CWD} from "./util.js";
+import {CUSTOM_LEVELS} from "./types.js";
 
 /**
  * Additional levels included in @foxxmd/logging as an object
  *
  * These are always applied when using `prettyOptsFactory` but can be overridden
  * */
-export const PRETTY_LEVELS: Extract<PrettyOptions['customLevels'], object> = {
-    verbose: 25,
-    log: 21,
-};
+const PRETTY_LEVELS: Extract<PrettyOptions['customLevels'], object> = CUSTOM_LEVELS;
 /**
  * Additional levels included in @foxxmd/logging as a string
  *
  * These are always applied when using `prettyOptsFactory` but can be overridden
  * */
-export const PRETTY_LEVELS_STR: Extract<PrettyOptions['customLevels'], string> = 'verbose:25,log:21';
+const PRETTY_LEVELS_STR: Extract<PrettyOptions['customLevels'], string> = 'verbose:25,log:21';
 
 /**
  * Additional level colors included in @foxxmd/logging as an object
@@ -41,8 +39,12 @@ export const PRETTY_ISO8601 = 'SYS:yyyy-mm-dd"T"HH:MM:ssp';
 /**
  * Builds the opinionated `@foxxmd/logging` defaults for pino-pretty `PrettyOptions` and merges them with an optional user-provided `PrettyOptions` object
  * */
-export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
-    const {customLevels = {}, customColors = {}, ...rest} = opts;
+export const prettyOptsFactory = (opts: Omit<PrettyOptions, 'customLevels'> = {}): PrettyOptions => {
+    const {
+        //customLevels = {},
+        customColors = {},
+        ...rest
+    } = opts;
 
     return {
         messageFormat: (log, messageKey, levelLabel, {colors}) => {
@@ -60,7 +62,7 @@ export const prettyOptsFactory = (opts: PrettyOptions = {}): PrettyOptions => {
         hideObject: false,
         ignore: 'pid,hostname,labels,err',
         translateTime: 'SYS:standard',
-        customLevels: buildLevels(customLevels),
+        customLevels: buildLevels({}),
         customColors: buildColors(customColors),
         colorizeObjects: true,
         // @ts-ignore
