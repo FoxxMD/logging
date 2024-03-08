@@ -11,6 +11,15 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
                 labels: loggerThis.labels ?? []
             }
         },
+        mixinMergeStrategy(mergeObject: Record<any, any>, mixinObject: Record<any, any>) {
+            if(mergeObject.labels === undefined || mixinObject.labels === undefined || mixinObject.labels.length === 0) {
+                return Object.assign(mergeObject, mixinObject)
+            }
+            const runtimeLabels = Array.isArray(mergeObject.labels) ? mergeObject.labels : [mergeObject.labels];
+            const finalObj = Object.assign(mergeObject, mixinObject);
+            finalObj.labels = [...(mixinObject.labels ?? []), ...runtimeLabels];
+            return finalObj;
+        },
         level: defaultLevel,
         customLevels: {
             verbose: 25,

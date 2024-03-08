@@ -364,6 +364,21 @@ describe('Child Logger', function() {
             expect(raw.labels[4]).eq('Test5');
         });
 
+        it('merges labels from log call with logger labels', async function () {
+            const [logger, testStream, rawStream] = testConsoleLogger();
+            const formattedBuff = pEvent(testStream, 'data');
+            const rawBuff = pEvent(rawStream, 'data');
+
+            logger.addLabel('Parent');
+            const child = childLogger(logger, ['Test1']);
+            child.debug({labels: ['Runtime']},'log something');
+            await sleep(10);
+            const formatted = (await formattedBuff).toString();
+            const raw = JSON.parse((await rawBuff).toString()) as LogData;
+            expect(formatted).includes(' [Parent] [Test1]');
+            expect(formatted).includes(' [Runtime] ');
+        });
+
         it('child labels do not affect parent logger labels', async function () {
             const [logger, testStream, rawStream] = testConsoleLogger();
             const formattedBuff = pEvent(testStream, 'data');
