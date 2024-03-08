@@ -13,6 +13,9 @@ import path from "path";
 import {ErrorWithCause} from "pony-cause";
 
 const pRoll = pinoRoll as unknown as typeof pinoRoll.default;
+/**
+ * Creates a `LogLevelStreamEntry` stream that writes to a rolling file at or above the minimum `level`
+ * */
 export const buildDestinationRollingFile = async (level: LogLevel | false, options: FileDestination): Promise<LogLevelStreamEntry | undefined> => {
     if (level === false) {
         return undefined;
@@ -73,6 +76,9 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
     };
 }
 
+/**
+ * Creates a `LogLevelStreamEntry` stream that writes to a static file at or above the minimum `level`
+ * */
 export const buildDestinationFile = (level: LogLevel | false, options: FileDestination): LogLevelStreamEntry | undefined => {
     if (level === false) {
         return undefined;
@@ -94,6 +100,11 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
     }
 }
 
+/**
+ * Creates a `LogLevelStreamEntry` stream that writes to a `NodeJs.WriteableStream` or [Sonic Boom `DestinationStream`](https://github.com/pinojs/sonic-boom) at or above the minimum `level`
+ *
+ * @see DestinationStream
+ * */
 export const buildDestinationStream = (level: LogLevel, options: StreamDestination): LogLevelStreamEntry => {
     return {
         level: level,
@@ -101,17 +112,24 @@ export const buildDestinationStream = (level: LogLevel, options: StreamDestinati
     }
 }
 
+/**
+ * Creates a `LogLevelStreamEntry` stream that writes to STDOUT at or above the minimum `level`
+ *
+ * @source
+ * @see buildDestinationStream
+ * */
 export const buildDestinationStdout = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
-    const opts = {...prettyConsole, ...options, destination: destination({dest: 1, sync: true})}
-    return {
-        level: level,
-        stream: prettyDef.default(opts)
-    }
+    const opts = {...options, destination: destination({dest: 1, sync: true})}
+    return buildDestinationStream(level, opts);
 }
 
+/**
+ * Creates a `LogLevelStreamEntry` stream that writes to STDERR at or above the minimum `level`
+ *
+ * @source
+ * @see buildDestinationStream
+ * */
 export const buildDestinationStderr = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
-    return {
-        level: level,
-        stream: prettyDef.default({...prettyConsole, ...options, destination: destination({dest: 2, sync: true})})
-    }
+    const opts = {...options, destination: destination({dest: 2, sync: true})};
+    return buildDestinationStream(level, opts);
 }

@@ -1,9 +1,11 @@
 import process from "process";
-import {FileLogOptions, FileLogOptionsParsed, isLogOptions, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
+import {FileLogOptionsParsed, isLogOptions, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
 import {logPath, projectDir} from "./constants.js";
 import {isAbsolute, resolve} from 'node:path';
-import {MarkRequired} from "ts-essentials";
 
+/**
+ * Takes an object and parses it into a fully-populated LogOptions object based on opinionated defaults
+ * */
 export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
     if (!isLogOptions(config)) {
         throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug',  -- 'file' may be false.`)

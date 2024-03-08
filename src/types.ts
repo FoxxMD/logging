@@ -49,8 +49,16 @@ export type Logger = PinoLogger<LogLevel> & {
     addLabel: (value: any) => void
 }
 
+/**
+ * An object with a `write` function that can be used by pino as a [Transport](https://getpino.io/#/docs/transports)
+ *
+ * All `buildDestination*` functions return this type as well as any [Pino Transport](https://getpino.io/#/docs/transports?id=known-transports)
+ * */
 export type LogLevelStreamEntry = StreamEntry<LogLevel>
 
+/**
+ * The structure of a Log object when returned by a stream `data` event
+ * */
 export type LogData = Record<string, any> & {
     level: number
     time: number

@@ -187,7 +187,7 @@ export interface FileOptions {
 
 ### Additional App Logger Configuration
 
-`loggerApp` and `loggerAppRolling` accept an optional second parameter, [`LoggerAppExtras`](https://foxxmd.github.io/logging/types/index.LoggerAppExtras.html) that allows adding additional log destinations or pino-pretty customization:
+`loggerApp` and `loggerAppRolling` accept an optional second parameter, [`LoggerAppExtras`](https://foxxmd.github.io/logging/interfaces/index.LoggerAppExtras.html) that allows adding additional log destinations or pino-pretty customization:
 
 ```ts
 export interface LoggerAppExtras {

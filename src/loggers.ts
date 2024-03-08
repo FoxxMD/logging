@@ -3,6 +3,13 @@ import {Logger, LoggerAppExtras, LogLevel, LogLevelStreamEntry, LogOptions} from
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino} from "pino";
 
+/**
+ * Builds a Logger object for use in your application
+ *
+ * `defaultLevel` must the minimum level ANY stream can log from IE it should be the lowest level any of your streams will possibly log. Recommended to always use `debug`.
+ *
+ * @see Logger
+ * */
 export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[]): Logger => {
     const plogger = pino({
         // @ts-ignore
@@ -37,6 +44,15 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
     }
     return plogger;
 }
+
+/**
+ * Returns a new logger with the given properties appended to all log objects created by it
+ *
+ * @param parent Logger Parent logger to inherit from
+ * @param labelsVal (any | any[]) Labels to always apply to logs from this logger
+ * @param context object Additional properties to always apply to logs from this logger
+ * @param options object
+ * */
 export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context: object = {}, options = {}): Logger => {
     const newChild = parent.child(context, options) as Logger;
     const labels = Array.isArray(labelsVal) ? labelsVal : [labelsVal];
@@ -64,6 +80,9 @@ export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')
  * */
 export const loggerDebug = buildLogger('debug', [buildDestinationStdout('debug')]);
 
+/**
+ * A Logger that logs to console and a static file
+ * */
 export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppExtras) => {
 
     const {
@@ -96,6 +115,9 @@ export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppEx
     return logger;
 }
 
+/**
+ * A Logger that logs to console and a rolling file
+ * */
 export const loggerAppRolling = async (config: LogOptions | object = {}, extras?: LoggerAppExtras) => {
 
     const {
