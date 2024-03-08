@@ -6,7 +6,8 @@ import {
     isLogOptions,
     LogData,
     LogLevel,
-    LOG_LEVELS
+    LOG_LEVELS,
+    LoggerAppExtras
 } from './types.js'
 
 import {
@@ -22,7 +23,7 @@ export type {
     LogOptions,
     LogData,
     LogLevel,
-    LOG_LEVELS
+    LoggerAppExtras
 }
 
 export {
@@ -30,6 +31,7 @@ export {
     loggerAppRolling,
     loggerDebug,
     loggerTest,
+    LOG_LEVELS,
     childLogger,
     parseLogOptions,
     isLogOptions
