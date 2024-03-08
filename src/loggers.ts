@@ -1,5 +1,5 @@
 import {parseLogOptions} from "./funcs.js";
-import {Logger, LogLevel, LogLevelStreamEntry, LogOptions} from "./types.js";
+import {Logger, LoggerAppExtras, LogLevel, LogLevelStreamEntry, LogOptions} from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino} from "pino";
 
@@ -64,14 +64,23 @@ export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')
  * */
 export const loggerDebug = buildLogger('debug', [buildDestinationStdout('debug')]);
 
-export const loggerApp = (config: LogOptions | object = {}) => {
+export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppExtras) => {
+
+    const {
+        pretty = {},
+        destinations = [],
+    } = extras || {};
+
     const options = parseLogOptions(config);
-    const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
+    const streams: LogLevelStreamEntry[] = [
+        buildDestinationStdout(options.console, pretty),
+        ...destinations
+    ];
 
     let error: Error;
     if(options.file.level !== false) {
         try {
-            const file = buildDestinationFile(options.file.level, {...options.file, append: true});
+            const file = buildDestinationFile(options.file.level, {...options.file, ...pretty, append: true});
             if (file !== undefined) {
                 streams.push(file);
             }
@@ -87,14 +96,23 @@ export const loggerApp = (config: LogOptions | object = {}) => {
     return logger;
 }
 
-export const loggerAppRolling = async (config: LogOptions | object = {}) => {
+export const loggerAppRolling = async (config: LogOptions | object = {}, extras?: LoggerAppExtras) => {
+
+    const {
+        pretty = {},
+        destinations = [],
+    } = extras || {};
+
     const options = parseLogOptions(config);
-    const streams: LogLevelStreamEntry[] = [buildDestinationStdout(options.console)];
+    const streams: LogLevelStreamEntry[] = [
+        buildDestinationStdout(options.console, pretty),
+        ...destinations
+    ];
 
     let error: Error;
     if(options.file.level !== false) {
         try {
-            const file = await buildDestinationRollingFile(options.file.level, options.file);
+            const file = await buildDestinationRollingFile(options.file.level, {...options.file, ...pretty});
             if (file !== undefined) {
                 streams.push(file);
             }

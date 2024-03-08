@@ -9,18 +9,21 @@ A typed, opinionated, batteries-included, [Pino](https://getpino.io)-based loggi
 Features:
 
 * Fully typed for Typescript projects
-* One-line, turn-key logging to console and rotating file
-* Child (nested) loggers with hierarchical label prefixes for log messages
+* One-line, [turn-key logging](#quick-start) to console and rotating file
+* [Child (nested) loggers](#child-loggers) with hierarchical label prefixes for log messages
 * Per-destination level filtering configurable via ENV or arguments
 * Clean, opinionated log output format powered by [pino-pretty](https://github.com/pinojs/pino-pretty):
-  * Standard timestamp (iso8601)
   * Colorized output when stream is TTY and supports it
-  * Automatically serialize passed objects and Errors, including [Error Cause](https://github.com/tc39/proposal-error-cause)
-* Bring-Your-Own settings
-  * Add or use your own streams for destinations
+  * Automatically [serialize passed objects and Errors](#serializing-objects-and-errors), including [Error Cause](https://github.com/tc39/proposal-error-cause)
+* [Bring-Your-Own settings](#additional-app-logger-configuration)
+  * Add or use your own streams/[transports](https://getpino.io/#/docs/transports?id=known-transports) for destinations
   * All pino-pretty configs are exposed and extensible
+* [Build-Your-Own Logger](#building-a-logger)
+  * Don't want to use any of the pre-built transports? Leverage the convenience of @foxxmd/logging wrappers and default settings but build your logger from scratch
 
 <img src="/assets/example.png" alt="example log output">
+
+**Documentation best viewed on [https://foxxmd.github.io/logging](https://foxxmd.github.io/logging)**
 
 # Install
 
@@ -145,13 +148,13 @@ export interface FileOptions {
    * For rolling log files
    *
    * When
-   * * value passed to rolling destination is a string (`filePath` from LogOptions is a string)
+   * * value passed to rolling destination is a string (`path` option) and
    * * `frequency` is defined
    *
    * This determines the format of the datetime inserted into the log file name:
    *
    * * `unix` - unix epoch timestamp in milliseconds
-   * * `iso`  - Full [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) datetime IE '2024-03-07T20:11:34Z'
+   * * `iso`  - Full ISO8601 datetime IE '2024-03-07T20:11:34Z'
    * * `auto`
    *   * When frequency is `daily` only inserts date IE YYYY-MM-DD
    *   * Otherwise inserts full ISO8601 datetime
@@ -181,6 +184,48 @@ export interface FileOptions {
 ```
 
 </details>
+
+### Additional App Logger Configuration
+
+`loggerApp` and `loggerAppRolling` accept an optional second parameter, [`LoggerAppExtras`](https://foxxmd.github.io/logging/types/index.LoggerAppExtras.html) that allows adding additional log destinations or pino-pretty customization:
+
+```ts
+export interface LoggerAppExtras {
+  /**
+   * Additional pino-pretty options that are applied to the built-in console/log streams
+   * */
+  pretty?: PrettyOptions
+  /**
+   * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other Pino Transports
+   * */
+  destinations?: LogLevelStreamEntry[]
+}
+```
+
+Some defaults and convenience variables for pino-pretty options are available in `@foxxmd/logging/factory` prefixed with `PRETTY_`. See [factory variables docs](https://foxxmd.github.io/logging/modules/factory.html) for all options.
+
+An example using the extras parameter:
+
+```ts
+import { loggerApp } from '@foxxmd/logging';
+import { 
+    PRETTY_ISO8601, // replaces standard timestamp with ISO8601 format
+  buildDestinationFile 
+} from "@foxxmd/logging/factory";
+
+const warnFileDestination = buildDestinationFile('warn', {path: './myLogs/warn.log'});
+
+const logger = loggerApp({}, {
+   destinations: [warnFileDestination],
+   pretty: {
+     translateTime: PRETTY_ISO8601
+   }
+});
+logger.debug('Test');
+// [2024-03-07T11:27:41-05:00] DEBUG: Test
+```
+
+See [Building A Logger](#building-a-logger) for more information.
 
 ## Usage
 

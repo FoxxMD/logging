@@ -88,7 +88,7 @@ export interface RollOptions {
      * For rolling log files
      *
      * When
-     * * value passed to rolling destination is a string (`filePath` from LogOptions is a string)
+     * * value passed to rolling destination is a string (`path` from LogOptions is a string) and
      * * `frequency` is defined
      *
      * This determines the format of the datetime inserted into the log file name:
@@ -152,3 +152,14 @@ export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & F
 export type StreamDestination =  Omit<PrettyOptions, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};
 
 export type LogOptionsParsed = Omit<Required<LogOptions>, 'file'> & { file: FileLogOptionsParsed }
+
+export interface LoggerAppExtras {
+    /**
+     * Additional pino-pretty options that are applied to the built-in console/log streams
+     * */
+    pretty?: PrettyOptions
+    /**
+     * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other [Pino Transports](https://getpino.io/#/docs/transports?id=known-transports)
+     * */
+    destinations?: LogLevelStreamEntry[]
+}
