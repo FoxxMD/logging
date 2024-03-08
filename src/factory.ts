@@ -1,11 +1,8 @@
 import {
-    prettyConsole,
-    prettyFile,
-    PRETTY_COLORS,
-    PRETTY_COLORS_STR,
+    PRETTY_OPTS_CONSOLE,
+    PRETTY_OPTS_FILE,
     //PRETTY_LEVELS,
     //PRETTY_LEVELS_STR,
-    PRETTY_ISO8601,
     prettyOptsFactory
 } from "./pretty.js";
 import {
@@ -16,11 +13,11 @@ import {
     buildDestinationFile
 } from "./destinations.js";
 import {buildLogger} from './loggers.js';
-import {FileDestination, StreamDestination} from './types.js'
+import {FileDestination, PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_ISO8601, StreamDestination} from './types.js'
 
 export {
-    prettyConsole,
-    prettyFile,
+    PRETTY_OPTS_CONSOLE,
+    PRETTY_OPTS_FILE,
     PRETTY_COLORS,
     PRETTY_COLORS_STR,
     //PRETTY_LEVELS,

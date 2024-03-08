@@ -3,7 +3,6 @@ import {
     LogLevelStreamEntry,
     LogOptions,
     FileLogOptions,
-    isLogOptions,
     LogData,
     LogLevel,
     LOG_LEVELS,
@@ -11,6 +10,7 @@ import {
 } from './types.js'
 
 import {
+    isLogOptions,
     parseLogOptions,
 } from './funcs.js'
 

@@ -1,4 +1,4 @@
-import {DestinationStream, Level, Logger as PinoLogger, LoggerOptions, StreamEntry} from 'pino';
+import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry} from 'pino';
 import {ErrorWithCause} from "pony-cause";
 import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
@@ -23,25 +23,6 @@ export interface LogOptions {
      * Specify the minimum log level streamed to the console (or docker container)
      * */
     console?: LogLevel
-}
-
-export const isLogOptions = (obj: object = {}): obj is LogOptions => {
-    return Object.entries(obj).every(([key, val]) => {
-        if(val === undefined) {
-            return true;
-        }
-        const t = typeof val;
-        if(key === 'file') {
-            if(t === 'object') {
-                return isFileLogOptions(t);
-            }
-            return t === 'string' || val === false;
-        }
-        if(t !== 'string') {
-            return false;
-        }
-        return LOG_LEVELS.includes(val.toLocaleLowerCase());
-    });
 }
 
 export type Logger = PinoLogger<LogLevel> & {
@@ -143,19 +124,6 @@ export interface FileLogOptionsStrong extends FileLogOptions {
 
 export type FileLogOptionsParsed = (Omit<FileLogOptions, 'file'> & {level: false}) | FileLogOptionsStrong
 
-const isFileLogOptions = (obj: any): obj is FileLogOptions => {
-    if (obj === null || typeof obj !== 'object') {
-        return false;
-    }
-    const levelOk = obj.level === undefined || ('level' in obj && obj.level === false || LOG_LEVELS.includes(obj.level.toLocaleLowerCase()));
-    const pathOk = obj.path === undefined || ('path' in obj && typeof obj.path === 'string' || typeof obj.path === 'function');
-    const frequencyOk = obj.frequency === undefined || ('frequency' in obj && typeof obj.frequency === 'string' || typeof obj.frequency === 'number');
-    const sizeOk = obj.size === undefined || ('size' in obj && typeof obj.size === 'string' || typeof obj.size === 'number');
-    const tsOk = obj.timestamp === undefined || ('timestamp' in obj && typeof obj.timestamp === 'string');
-
-    return levelOk && pathOk && frequencyOk && sizeOk && tsOk;
-}
-
 export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & FileOptionsParsed;
 export type StreamDestination =  Omit<PrettyOptions, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};
 
@@ -190,3 +158,35 @@ export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
  * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
  * */
 export type PinoLoggerOptions = Omit<LoggerOptions, 'level' | 'mixin' | 'mixinMergeStrategy' | 'customLevels' | 'useOnlyCustomLevels' | 'transport'>
+
+/**
+ * Additional levels included in @foxxmd/logging as an object
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const PRETTY_LEVELS: Extract<PrettyOptions['customLevels'], object> = CUSTOM_LEVELS;
+/**
+ * Additional levels included in @foxxmd/logging as a string
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const PRETTY_LEVELS_STR: Extract<PrettyOptions['customLevels'], string> = 'verbose:25,log:21';
+/**
+ * Additional level colors included in @foxxmd/logging as an object
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const PRETTY_COLORS_STR: Extract<PrettyOptions['customColors'], string> = 'verbose:magenta,log:greenBright';
+/**
+ * Additional level colors included in @foxxmd/logging as a string
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const PRETTY_COLORS: Extract<PrettyOptions['customColors'], object> = {
+    'verbose': 'magenta',
+    'log': 'greenBright'
+}
+/**
+ * Use on `translateTime` pino-pretty option to print timestamps in ISO8601 format
+ * */
+export const PRETTY_ISO8601 = 'SYS:yyyy-mm-dd"T"HH:MM:ssp';

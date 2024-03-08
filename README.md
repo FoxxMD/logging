@@ -353,9 +353,9 @@ const myCustomizedConfig = prettyOptsFactory({ colorize: false });
 Pre-configured `PrettyOptions` are also provided for different destinations:
 
 ```ts
-import { 
-    prettyConsole, // default config
-    prettyFile     // disables colorize
+import {
+  PRETTY_OPTS_CONSOLE, // default config
+  PRETTY_OPTS_FILE     // disables colorize
 } from "@foxxmd/logging/factory";
 ```
 

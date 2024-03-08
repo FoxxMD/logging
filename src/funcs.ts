@@ -1,8 +1,38 @@
 import process from "process";
-import {FileLogOptionsParsed, isLogOptions, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
+import {FileLogOptions, FileLogOptionsParsed, LOG_LEVELS, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
 import {logPath, projectDir} from "./constants.js";
 import {isAbsolute, resolve} from 'node:path';
 
+export const isLogOptions = (obj: object = {}): obj is LogOptions => {
+    return Object.entries(obj).every(([key, val]) => {
+        if (val === undefined) {
+            return true;
+        }
+        const t = typeof val;
+        if (key === 'file') {
+            if (t === 'object') {
+                return isFileLogOptions(t);
+            }
+            return t === 'string' || val === false;
+        }
+        if (t !== 'string') {
+            return false;
+        }
+        return LOG_LEVELS.includes(val.toLocaleLowerCase());
+    });
+}
+const isFileLogOptions = (obj: any): obj is FileLogOptions => {
+    if (obj === null || typeof obj !== 'object') {
+        return false;
+    }
+    const levelOk = obj.level === undefined || ('level' in obj && obj.level === false || LOG_LEVELS.includes(obj.level.toLocaleLowerCase()));
+    const pathOk = obj.path === undefined || ('path' in obj && typeof obj.path === 'string' || typeof obj.path === 'function');
+    const frequencyOk = obj.frequency === undefined || ('frequency' in obj && typeof obj.frequency === 'string' || typeof obj.frequency === 'number');
+    const sizeOk = obj.size === undefined || ('size' in obj && typeof obj.size === 'string' || typeof obj.size === 'number');
+    const tsOk = obj.timestamp === undefined || ('timestamp' in obj && typeof obj.timestamp === 'string');
+
+    return levelOk && pathOk && frequencyOk && sizeOk && tsOk;
+}
 /**
  * Takes an object and parses it into a fully-populated LogOptions object based on opinionated defaults
  * */
