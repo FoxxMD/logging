@@ -1,5 +1,6 @@
 import {parseLogOptions} from "./funcs.js";
 import {
+    PinoLoggerOptions,
     CUSTOM_LEVELS,
     Logger,
     LoggerAppExtras,
@@ -17,7 +18,7 @@ import {pino} from "pino";
  *
  * @see Logger
  * */
-export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[]): Logger => {
+export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[], extras: PinoLoggerOptions = {}): Logger => {
     // TODO maybe implement custom levels
     //const { levels = {} } = extras;
 
@@ -40,6 +41,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
         level: defaultLevel,
         customLevels: CUSTOM_LEVELS,
         useOnlyCustomLevels: false,
+        ...extras
     }, pino.multistream(streams)) as Logger;
     plogger.labels = [];
 
@@ -95,6 +97,7 @@ export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppEx
     const {
         pretty = {},
         destinations = [],
+        pino,
     } = extras || {};
 
     const options = parseLogOptions(config);
@@ -115,7 +118,7 @@ export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppEx
         }
     }
 
-    const logger = buildLogger('debug' as LogLevel, streams);
+    const logger = buildLogger('debug' as LogLevel, streams, pino);
     if (error !== undefined) {
         logger.warn(error);
     }
@@ -130,6 +133,7 @@ export const loggerAppRolling = async (config: LogOptions | object = {}, extras?
     const {
         pretty = {},
         destinations = [],
+        pino
     } = extras || {};
 
     const options = parseLogOptions(config);
@@ -149,7 +153,7 @@ export const loggerAppRolling = async (config: LogOptions | object = {}, extras?
             error = e;
         }
     }
-    const logger = buildLogger('debug' as LogLevel, streams);
+    const logger = buildLogger('debug' as LogLevel, streams, pino);
     if (error !== undefined) {
         logger.warn(error);
     }

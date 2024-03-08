@@ -167,9 +167,13 @@ export interface LoggerAppExtras {
      * */
     pretty?: PrettyOptions
     /**
-     * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other [Pino Transports](https://getpino.io/#/docs/transports?id=known-transports)
+     * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by `buildDestination*` functions or other [Pino Transports](https://getpino.io/#/docs/transports?id=known-transports)
      * */
     destinations?: LogLevelStreamEntry[]
+    /**
+     * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
+     * */
+    pino?: PinoLoggerOptions
 }
 
 /**
@@ -181,3 +185,8 @@ export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
     verbose: 25,
     log: 21
 }
+
+/**
+ * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
+ * */
+export type PinoLoggerOptions = Omit<LoggerOptions, 'level' | 'mixin' | 'mixinMergeStrategy' | 'customLevels' | 'useOnlyCustomLevels' | 'transport'>

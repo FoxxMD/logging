@@ -200,6 +200,10 @@ export interface LoggerAppExtras {
    * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other Pino Transports
    * */
   destinations?: LogLevelStreamEntry[]
+  /**
+   * Additional Pino Log options that are passed to `pino()` on logger creation
+   * */
+  pino?: PinoLoggerOptions
 }
 ```
 
