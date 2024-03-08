@@ -66,19 +66,19 @@ The package exports 4 top-level loggers.
 
 These are the loggers that should be used for the majority of your application. They accept an optional configuration object for configuring log destinations.
 
-* `loggerApp` - Logs to console and a fixed file destination
-* `loggerAppRolling` - Logs to console and a rolling file destination
+* [`loggerApp`](https://foxxmd.github.io/logging/functions/index.loggerApp.html) - Logs to console and a fixed file destination
+* [`loggerAppRolling`](https://foxxmd.github.io/logging/functions/index.loggerAppRolling.html) - Logs to console and a rolling file destination
 
 ### Helper Loggers
 
 These loggers are pre-defined for specific use cases:
 
-* `loggerDebug` - Logs ONLY to console at minimum `debug` level. Can be used during application startup before a logger app configuration has been parsed.
-* `loggerTest` - A noop logger (will not log anywhere) for use in tests/mockups.
+* [`loggerDebug`](https://foxxmd.github.io/logging/variables/index.loggerDebug.html) - Logs ONLY to console at minimum `debug` level. Can be used during application startup before a logger app configuration has been parsed.
+* [`loggerTest`](https://foxxmd.github.io/logging/variables/index.loggerTest.html) - A noop logger (will not log anywhere) for use in tests/mockups.
 
 ## Configuring
 
-The [App Loggers](#app-loggers) take an optional config object.
+The [App Loggers](#app-loggers) take an optional config object [`LogOptions`](https://foxxmd.github.io/logging/interfaces/index.LogOptions.html):
 
 ```ts
 interface LogOptions {
@@ -100,7 +100,7 @@ interface LogOptions {
   file?: LogLevel | false | FileLogOptions
 }
 ```
-Available `LogLevel` levels, from lowest to highest:
+Available [`LogLevel`](https://foxxmd.github.io/logging/types/index.LogLevel.html) levels, from lowest to highest:
 
 * `debug`
 * `verbose`
@@ -124,7 +124,7 @@ const logger = loggerApp({
 
 ### File Options
 
-`file` in `LogOptions` may be an object that specifies more behavior log files.
+[`file` in `LogOptions`](https://foxxmd.github.io/logging/interfaces/index.FileLogOptions.html) may be an object that specifies more behavior log files.
 
 <details>
 
@@ -154,7 +154,7 @@ export interface FileOptions {
    * This determines the format of the datetime inserted into the log file name:
    *
    * * `unix` - unix epoch timestamp in milliseconds
-   * * `iso`  - Full ISO8601 datetime IE '2024-03-07T20:11:34Z'
+   * * `iso`  - Full ISO8601 datetime IE '2024-03-07T20:11:34-00:00'
    * * `auto`
    *   * When frequency is `daily` only inserts date IE YYYY-MM-DD
    *   * Otherwise inserts full ISO8601 datetime
@@ -208,9 +208,9 @@ An example using the extras parameter:
 
 ```ts
 import { loggerApp } from '@foxxmd/logging';
-import { 
+import {
     PRETTY_ISO8601, // replaces standard timestamp with ISO8601 format
-  buildDestinationFile 
+    buildDestinationFile 
 } from "@foxxmd/logging/factory";
 
 const warnFileDestination = buildDestinationFile('warn', {path: './myLogs/warn.log'});
@@ -231,7 +231,7 @@ See [Building A Logger](#building-a-logger) for more information.
 
 ### Child Loggers
 
-[Pino Child loggers](https://getpino.io/#/docs/child-loggers) can be created using the `childLogger` function with the added ability to inherit **Labels** from their parent loggers.
+[Pino Child loggers](https://getpino.io/#/docs/child-loggers) can be created using the [`childLogger`](https://foxxmd.github.io/logging/functions/index.childLogger.html) function with the added ability to inherit **Labels** from their parent loggers.
 
 **Labels** are inserted between the log level and message contents of a log. The child logger inherits **all** labels from **all** its parent loggers.
 
@@ -301,9 +301,9 @@ Passing an `Error` without a second argument (message) will cause the top-level 
 
 # Building A Logger
 
-All the functionality required to build your own logger is exported by `@foxxmd/logging/factory`. You can customize almost every facet of logging.
+All the functionality required to build your own logger is exported by [`@foxxmd/logging/factory`](https://foxxmd.github.io/logging/modules/factory.html). You can customize almost every facet of logging.
 
-A logger is composed of a minimum default level and array of objects that implement `StreamEntry`, the same interface used by [`pino.multistream`](https://getpino.io/#/docs/api?id=pino-multistream). The only constraint is that your streams must accept the same levels as `@foxxmd/logging` using the `LogLevelStreamEntry` interface that extends `StreamEntry`.
+A logger is composed of a minimum default level and array of objects that implement [`StreamEntry`](https://foxxmd.github.io/logging/interfaces/index._internal_.StreamEntry-1.html), the same interface used by [`pino.multistream`](https://getpino.io/#/docs/api?id=pino-multistream). The only constraint is that your streams must accept the same levels as `@foxxmd/logging` using the [`LogLevelStreamEntry`](https://foxxmd.github.io/logging/types/index.LogLevelStreamEntry.html) interface that extends `StreamEntry`.
 
 ```ts
 import {LogLevelStreamEntry} from '@foxxmd/logging';
@@ -332,9 +332,9 @@ import {
 All `buildDestination` functions take args:
 
 * `level` (first arg) - minimum level to log at
-* `options` (second arg) - an object extending [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options)
+* `options` (second arg) - an object extending [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options), [`PrettyOptions`](https://foxxmd.github.io/logging/interfaces/factory._internal_.PrettyOptions_.html)
 
-`options` inherits a default `pino-pretty` configuration that comprises `@foxxmd/logging`'s opinionated logging format. The common default config can be generated using `prettyOptsFactory` which accepts an optional [`pino-pretty` options](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options) object to override defaults:
+`options` inherits a default `pino-pretty` configuration that comprises `@foxxmd/logging`'s opinionated logging format. The common default config can be generated using [`prettyOptsFactory`](https://foxxmd.github.io/logging/functions/factory.prettyOptsFactory.html) which accepts an optional `PrettyOptions` object to override defaults:
 
 ```ts
 import { prettyOptsFactory } from "@foxxmd/logging/factory";
@@ -356,7 +356,7 @@ import {
 
 Specific buildDestinations also require passing a stream or path:
 
-`buildDestinationStream` must pass a `NodeJS.WriteableStream` or SonicBoom `DestinationStream` to options as `destination`
+[`buildDestinationStream`](https://foxxmd.github.io/logging/functions/factory.buildDestinationStream.html) must pass a `NodeJS.WriteableStream` or SonicBoom `DestinationStream` to options as [`destination`](https://foxxmd.github.io/logging/types/factory.StreamDestination.html)
 
 ```ts
 import {buildDestinationStream} from "@foxxmd/logging/factory";
@@ -365,9 +365,9 @@ const myStream = new WritableStream();
 const dest = buildDestinationStream('debug', {destination: myStream});
 ```
 
-`buildDestinationStdout` and `buildDestinationStderr` do not require a destination as they are fixed to STDOUT/STDERR
+[`buildDestinationStdout`](https://foxxmd.github.io/logging/functions/factory.buildDestinationStdout.html) and [`buildDestinationStderr`](https://foxxmd.github.io/logging/functions/factory.buildDestinationStderr.html) do not require a destination as they are fixed to STDOUT/STDERR
 
-`buildDestinationFile` and `buildDestinationRollingFile` must pass a `path` to options
+[`buildDestinationFile`](https://foxxmd.github.io/logging/functions/factory.buildDestinationFile.html) and [`buildDestinationRollingFile`](https://foxxmd.github.io/logging/functions/factory.buildDestinationRollingFile.html) must pass a [`path`](https://foxxmd.github.io/logging/types/factory.FileDestination.html) to options
 
 ```ts
 import {buildDestinationFile} from "@foxxmd/logging/factory";
@@ -414,7 +414,7 @@ logger.debug('Test')
 
 ### Parsing LogOptions
 
-If you wish to use [`LogOptions`](#configuring) to get default log levels for your destinations use `parseLogOptions`:
+If you wish to use [`LogOptions`](#configuring) to get default log levels for your destinations use [`parseLogOptions`](https://foxxmd.github.io/logging/functions/index.parseLogOptions.html):
 
 ```ts
 import {parseLogOptions, LogOptions} from '@foxxmd/logging';
