@@ -6,7 +6,8 @@ import {
     LogData,
     LogLevel,
     LOG_LEVELS,
-    LoggerAppExtras
+    LoggerAppExtras,
+    PrettyOptionsExtra
 } from './types.js'
 
 import {
@@ -23,7 +24,8 @@ export type {
     LogOptions,
     LogData,
     LogLevel,
-    LoggerAppExtras
+    LoggerAppExtras,
+    PrettyOptionsExtra
 }
 
 export {

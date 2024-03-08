@@ -16,6 +16,7 @@ Features:
 * Clean, opinionated log output format powered by [pino-pretty](https://github.com/pinojs/pino-pretty):
   * Colorized output when stream is TTY and supports it
   * Automatically [serialize passed objects and Errors](#serializing-objects-and-errors), including [Error Cause](https://github.com/tc39/proposal-error-cause)
+  * Automatically redact current working directory from log output
 * [Bring-Your-Own settings](#additional-app-logger-configuration)
   * Add or use your own streams/[transports](https://getpino.io/#/docs/transports?id=known-transports) for destinations
   * All pino-pretty configs are exposed and extensible
@@ -193,9 +194,9 @@ export interface FileOptions {
 ```ts
 export interface LoggerAppExtras {
   /**
-   * Additional pino-pretty options that are applied to the built-in console/log streams
+   * Additional pino-pretty options that are applied to the built-in console/log streams (including CWD redaction)
    * */
-  pretty?: PrettyOptions
+  pretty?: PrettyOptionsExtra
   /**
    * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other Pino Transports
    * */

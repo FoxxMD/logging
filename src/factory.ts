@@ -3,7 +3,9 @@ import {
     PRETTY_OPTS_FILE,
     //PRETTY_LEVELS,
     //PRETTY_LEVELS_STR,
-    prettyOptsFactory
+    prettyOptsFactory,
+    prettyOptsFileFactory,
+    prettyOptsConsoleFactory
 } from "./pretty.js";
 import {
     buildDestinationStream,
@@ -24,6 +26,8 @@ export {
     //PRETTY_LEVELS_STR,
     PRETTY_ISO8601,
     prettyOptsFactory,
+    prettyOptsFileFactory,
+    prettyOptsConsoleFactory,
     buildDestinationStream,
     buildDestinationStdout,
     buildDestinationStderr,

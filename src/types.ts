@@ -124,8 +124,8 @@ export interface FileLogOptionsStrong extends FileLogOptions {
 
 export type FileLogOptionsParsed = (Omit<FileLogOptions, 'file'> & {level: false}) | FileLogOptionsStrong
 
-export type FileDestination =    Omit<PrettyOptions, 'destination' | 'sync'> & FileOptionsParsed;
-export type StreamDestination =  Omit<PrettyOptions, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};
+export type FileDestination =    Omit<PrettyOptionsExtra, 'destination' | 'sync'> & FileOptionsParsed;
+export type StreamDestination =  Omit<PrettyOptionsExtra, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};
 
 export type LogOptionsParsed = Omit<Required<LogOptions>, 'file'> & { file: FileLogOptionsParsed }
 
@@ -133,7 +133,7 @@ export interface LoggerAppExtras {
     /**
      * Additional pino-pretty options that are applied to the built-in console/log streams
      * */
-    pretty?: PrettyOptions
+    pretty?: PrettyOptionsExtra
     /**
      * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by `buildDestination*` functions or other [Pino Transports](https://getpino.io/#/docs/transports?id=known-transports)
      * */
@@ -158,6 +158,22 @@ export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
  * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
  * */
 export type PinoLoggerOptions = Omit<LoggerOptions, 'level' | 'mixin' | 'mixinMergeStrategy' | 'customLevels' | 'useOnlyCustomLevels' | 'transport'>
+
+/**
+ * pino-pretty options and additional options specific to how @foxxmd/logging uses pino-pretty
+ * */
+export interface PrettyOptionsExtra extends Omit<PrettyOptions, 'customLevels'> {
+    /**
+     * Control whether the current working directory should be replaced with 'CWD' in log output
+     *
+     * Useful for eliminating noisy parent paths that aren't relevant during debugging -- or to protect user privacy.
+     *
+     * **NOTE:** Only applies to log message and errors. If you need to redact arbitrary properties you should use pino's [`redact`](https://getpino.io/#/docs/api?id=redact-array-object) or pino-pretty's [`customPrettifiers`](https://github.com/pinojs/pino-pretty?tab=readme-ov-file#options)
+     *
+     * @default true
+     * */
+    redactCwd?: boolean
+}
 
 /**
  * Additional levels included in @foxxmd/logging as an object

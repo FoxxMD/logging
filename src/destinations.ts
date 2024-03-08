@@ -7,7 +7,7 @@ import {
 } from "./types.js";
 import {DestinationStream, pino, destination} from "pino";
 import {build} from "pino-pretty"
-import {PRETTY_OPTS_CONSOLE, PRETTY_OPTS_FILE} from "./pretty.js";
+import {PRETTY_OPTS_CONSOLE, PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
 import {ErrorWithCause} from "pony-cause";
@@ -94,7 +94,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 
         return {
             level: level,
-            stream: build({...PRETTY_OPTS_FILE, ...rest, destination: dest})
+            stream: build({...prettyOptsFileFactory(rest), ...rest, destination: dest})
         };
     } catch (e: any) {
         throw new ErrorWithCause<Error>('WILL NOT write to file due to an error while trying to access the specified directory', {cause: e as Error});
@@ -109,7 +109,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 export const buildDestinationStream = (level: LogLevel, options: StreamDestination): LogLevelStreamEntry => {
     return {
         level: level,
-        stream: build({...PRETTY_OPTS_CONSOLE, ...options})
+        stream: build({...prettyOptsConsoleFactory(options)})
     }
 }
 

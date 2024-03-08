@@ -1,28 +1,31 @@
 import {PrettyOptions} from "pino-pretty";
 import {CWD} from "./util.js";
-import {PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_LEVELS, PRETTY_LEVELS_STR} from "./types.js";
+import {PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_LEVELS, PRETTY_LEVELS_STR, PrettyOptionsExtra} from "./types.js";
 
 /**
  * Builds the opinionated `@foxxmd/logging` defaults for pino-pretty `PrettyOptions` and merges them with an optional user-provided `PrettyOptions` object
  * */
-export const prettyOptsFactory = (opts: Omit<PrettyOptions, 'customLevels'> = {}): PrettyOptions => {
+export const prettyOptsFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions => {
     const {
         //customLevels = {},
         customColors = {},
+        redactCwd = true,
         ...rest
     } = opts;
+
+    let redactFunc: (content: string) => string;
+    if(redactCwd) {
+        redactFunc = (content) => content.replaceAll(CWD, 'CWD');
+    } else {
+        redactFunc = (content) => content;
+    }
 
     return {
         messageFormat: (log, messageKey, levelLabel, {colors}) => {
             const labels: string[] = log.labels as string[] ?? [];
-            const leaf = log.leaf as string | undefined;
-            const nodes = labels;
-            if (leaf !== null && leaf !== undefined && !nodes.includes(leaf)) {
-                nodes.push(leaf);
-            }
-            const labelContent = nodes.length === 0 ? '' : `${nodes.map((x: string) => colors.blackBright(`[${x}]`)).join(' ')} `;
-            const msg = (log[messageKey] as string).replaceAll(CWD, 'CWD');
-            const stackTrace = log.err !== undefined ? `\n${(log.err as any).stack.replaceAll(CWD, 'CWD')}` : '';
+            const labelContent = labels.length === 0 ? '' : `${labels.map((x: string) => colors.blackBright(`[${x}]`)).join(' ')} `;
+            const msg = redactFunc((log[messageKey] as string));
+            const stackTrace = log.err !== undefined ? redactFunc(`\n${(log.err as any).stack}`) : '';
             return `${labelContent}${msg}${stackTrace}`;
         },
         hideObject: false,
@@ -69,18 +72,36 @@ const buildColors = (userColors: PrettyOptions['customColors'] = {}): PrettyOpti
     return colors;
 }
 
+const PRETTY_OPTS_CONSOLE_DEFAULTS: PrettyOptions = {sync: true};
+
+/**
+ * Generate pino-pretty `PrettyOptions` for use with console/stream output
+ *
+ * @source
+ * */
+export const prettyOptsConsoleFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions => prettyOptsFactory({...opts, ...PRETTY_OPTS_CONSOLE_DEFAULTS});
 /**
  * Pre-defined pino-pretty `PrettyOptions` for use with console/stream output
  *
  * @source
  * */
-export const PRETTY_OPTS_CONSOLE: PrettyOptions = prettyOptsFactory({sync: true})
+export const PRETTY_OPTS_CONSOLE: PrettyOptions = prettyOptsConsoleFactory();
+
+const PRETTY_OPTS_FILE_DEFAULTS: PrettyOptions = {
+    colorize: false,
+    sync: false,
+}
+
+/**
+ * Generate pino-pretty `PrettyOptions` for use with file output
+ *
+ * @source
+ * */
+export const prettyOptsFileFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions => prettyOptsFactory({...opts, ...PRETTY_OPTS_FILE_DEFAULTS});
+
 /**
  * Pre-defined pino-pretty `PrettyOptions` for use with file output
  *
  * @source
  * */
-export const PRETTY_OPTS_FILE: PrettyOptions = prettyOptsFactory({
-    colorize: false,
-    sync: false,
-});
+export const PRETTY_OPTS_FILE: PrettyOptions = prettyOptsFileFactory();
