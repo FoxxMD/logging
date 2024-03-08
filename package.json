@@ -11,6 +11,7 @@
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
     "example": "tsx example/kitchenSink.ts"
   },
+  "runkitExampleFilename": "example/runkit.js",
   "keywords": [],
   "author": "FoxxMD",
   "license": "MIT",

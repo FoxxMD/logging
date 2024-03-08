@@ -2,6 +2,7 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/foxxmd/logging)](https://github.com/FoxxMD/logging/releases)
 [![NPM Version](https://img.shields.io/npm/v/%40foxxmd%2Flogging)](https://www.npmjs.com/package/@foxxmd/logging)
+[![Try on Runkit](https://img.shields.io/static/v1?label=Try%20it%20online%20on&message=RunKit&color=f55fa6)](https://npm.runkit.com/%40foxxmd%2Flogging)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A typed, opinionated, batteries-included, [Pino](https://getpino.io)-based logging solution for backend TS/JS projects.
