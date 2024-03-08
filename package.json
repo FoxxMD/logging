@@ -30,7 +30,8 @@
       "./factory": "./src/factory.js"
     },
     "dialects": [
-      "esm"
+      "esm",
+      "commonjs"
     ]
   },
   "devDependencies": {
@@ -77,13 +78,23 @@
       "import": {
         "types": "./dist/esm/index.d.ts",
         "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/index.d.ts",
+        "default": "./dist/commonjs/index.js"
       }
     },
     "./factory": {
       "import": {
         "types": "./dist/esm/factory.d.ts",
         "default": "./dist/esm/factory.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/factory.d.ts",
+        "default": "./dist/commonjs/factory.js"
       }
     }
-  }
+  },
+  "main": "./dist/commonjs/index.js",
+  "types": "./dist/commonjs/index.d.ts"
 }

@@ -6,13 +6,14 @@ import {
     FileDestination,
 } from "./types.js";
 import {DestinationStream, pino, destination} from "pino";
-import prettyDef, {PrettyOptions} from "pino-pretty";
+import {build} from "pino-pretty"
 import {prettyConsole, prettyFile} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
 import {ErrorWithCause} from "pony-cause";
 
 const pRoll = pinoRoll as unknown as typeof pinoRoll.default;
+
 /**
  * Creates a `LogLevelStreamEntry` stream that writes to a rolling file at or above the minimum `level`
  * */
@@ -72,7 +73,7 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
 
     return {
         level: level,
-        stream: prettyDef.default({...prettyFile, ...rest, destination: rollingDest})
+        stream: build({...prettyFile, ...rest, destination: rollingDest})
     };
 }
 
@@ -93,7 +94,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 
         return {
             level: level,
-            stream: prettyDef.default({...prettyFile, ...rest, destination: dest})
+            stream: build({...prettyFile, ...rest, destination: dest})
         };
     } catch (e: any) {
         throw new ErrorWithCause<Error>('WILL NOT write to file due to an error while trying to access the specified directory', {cause: e as Error});
@@ -108,7 +109,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 export const buildDestinationStream = (level: LogLevel, options: StreamDestination): LogLevelStreamEntry => {
     return {
         level: level,
-        stream: prettyDef.default({...prettyConsole, ...options})
+        stream: build({...prettyConsole, ...options})
     }
 }
 
