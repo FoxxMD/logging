@@ -1,7 +1,7 @@
 {
   "name": "@foxxmd/logging",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "repository": "https://github.com/foxxmd/logging",
   "description": "",
   "scripts": {
@@ -9,7 +9,6 @@
     "build": "tsc",
     "prepare": "tshy",
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
-    "postinstall": "patch-package",
     "example": "tsx example/kitchenSink.ts"
   },
   "keywords": [],
@@ -60,10 +59,9 @@
     "yaml": "^2.3.4"
   },
   "dependencies": {
-    "patch-package": "^8.0.0",
     "pino": "^8.19.0",
-    "pino-pretty": "^10.3.1",
-    "pino-roll": "^1.0.0-rc.1",
+    "pino-pretty": "github:foxxmd/pino-pretty#additionalFunctionality",
+    "pino-roll": "github:foxxmd/pino-roll#fileAsFunc",
     "pony-cause": "^2.1.10"
   },
   "overrides": {
