@@ -51,3 +51,13 @@ export function sleep(ms: number) {
 }
 
 export const CWD = process.cwd();
+
+export const getLongestStr = (levels: string[]): number => {
+    let longest = 0;
+    for (const l of levels) {
+        if (l.length > longest) {
+            longest = l.length;
+        }
+    }
+    return longest;
+}

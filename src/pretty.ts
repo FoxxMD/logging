@@ -1,6 +1,13 @@
 import {PrettyOptions} from "pino-pretty";
-import {CWD} from "./util.js";
-import {PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_LEVELS, PRETTY_LEVELS_STR, PrettyOptionsExtra} from "./types.js";
+import {CWD, getLongestStr} from "./util.js";
+import {
+    LOG_LEVEL_NAMES,
+    PRETTY_COLORS,
+    PRETTY_COLORS_STR,
+    PRETTY_LEVELS,
+    PRETTY_LEVELS_STR,
+    PrettyOptionsExtra
+} from "./types.js";
 
 /**
  * Builds the opinionated `@foxxmd/logging` defaults for pino-pretty `PrettyOptions` and merges them with an optional user-provided `PrettyOptions` object
@@ -10,6 +17,8 @@ export const prettyOptsFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions 
         //customLevels = {},
         customColors = {},
         redactCwd = true,
+        padLevels = true,
+        customPrettifiers = {},
         ...rest
     } = opts;
 
@@ -18,6 +27,13 @@ export const prettyOptsFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions 
         redactFunc = (content) => content.replaceAll(CWD, 'CWD');
     } else {
         redactFunc = (content) => content;
+    }
+
+    const longestLevelNameLength = getLongestStr([...LOG_LEVEL_NAMES]);
+    const padLevelFunc = padLevel(longestLevelNameLength);
+
+    if(padLevels && customPrettifiers.level === undefined) {
+        customPrettifiers.level = (logLevel, key, log, { label, labelColorized }) => padLevelFunc(label, labelColorized)
     }
 
     return {
@@ -36,6 +52,7 @@ export const prettyOptsFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions 
         colorizeObjects: true,
         // @ts-ignore
         useOnlyCustomProps: false,
+        customPrettifiers,
         ...rest
     }
 }
@@ -70,6 +87,18 @@ const buildColors = (userColors: PrettyOptions['customColors'] = {}): PrettyOpti
         }, []).join(',');
     }
     return colors;
+}
+
+export const padLevel = (length: number) => (label: string, labelColorized?: string) => {
+    // pad to fix alignment
+    // assuming longest level is VERBOSE
+    // and may be colorized
+    const paddedLabel = label.padEnd(length)
+    if(labelColorized !== undefined && labelColorized !== label) {
+        const padDiff = paddedLabel.length - label.length;
+        return labelColorized.padEnd(labelColorized.length + padDiff);
+    }
+    return paddedLabel;
 }
 
 const PRETTY_OPTS_CONSOLE_DEFAULTS: PrettyOptions = {sync: true};

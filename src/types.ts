@@ -1,10 +1,39 @@
-import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry} from 'pino';
+import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry, Level} from 'pino';
 import {ErrorWithCause} from "pony-cause";
 import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
 
-export type LogLevel = typeof LOG_LEVELS[number];
-export const LOG_LEVELS= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
+export type LogLevel = typeof LOG_LEVEL_NAMES[number];
+
+/**
+ * Pino default levels
+ *
+ * @see pino/lib/constants.js
+ * */
+const PINO_DEFAULT_LEVELS = {
+    trace: 10,
+    debug: 20,
+    info: 30,
+    warn: 40,
+    error: 50,
+    fatal: 60
+}
+
+const PINO_DEFAULT_LEVEL_NAMES = Object.keys(PINO_DEFAULT_LEVELS) as (Level)[];
+
+/**
+ * Additional levels included in @foxxmd/logging as an object
+ *
+ * These are always applied when using `prettyOptsFactory` but can be overridden
+ * */
+export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
+    verbose: 25,
+    log: 21
+}
+
+const CUSTOM_LEVEL_NAMES = Object.keys(CUSTOM_LEVELS);
+
+export const LOG_LEVEL_NAMES= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
 
 export interface LogOptions {
     /**
@@ -145,16 +174,6 @@ export interface LoggerAppExtras {
 }
 
 /**
- * Additional levels included in @foxxmd/logging as an object
- *
- * These are always applied when using `prettyOptsFactory` but can be overridden
- * */
-export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
-    verbose: 25,
-    log: 21
-}
-
-/**
  * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
  * */
 export type PinoLoggerOptions = Omit<LoggerOptions, 'level' | 'mixin' | 'mixinMergeStrategy' | 'customLevels' | 'useOnlyCustomLevels' | 'transport'>
@@ -173,6 +192,12 @@ export interface PrettyOptionsExtra extends Omit<PrettyOptions, 'customLevels'> 
      * @default true
      * */
     redactCwd?: boolean
+    /**
+     * Pads levels in log string so all are the same length
+     *
+     * @default true
+     * */
+    padLevels?: boolean
 }
 
 /**

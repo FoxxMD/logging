@@ -5,7 +5,7 @@ import {
     FileLogOptions,
     LogData,
     LogLevel,
-    LOG_LEVELS,
+    LOG_LEVEL_NAMES,
     LoggerAppExtras,
     PrettyOptionsExtra
 } from './types.js'
@@ -33,7 +33,7 @@ export {
     loggerAppRolling,
     loggerDebug,
     loggerTest,
-    LOG_LEVELS,
+    LOG_LEVEL_NAMES,
     childLogger,
     parseLogOptions,
     isLogOptions

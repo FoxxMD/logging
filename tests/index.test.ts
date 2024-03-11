@@ -4,7 +4,7 @@ import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
 import {sleep} from "../src/util.js";
-import {LogData, LOG_LEVELS} from "../src/types.js";
+import {LogData, LOG_LEVEL_NAMES} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
 import {buildDestinationStream, buildDestinationRollingFile, buildDestinationFile} from "../src/destinations.js";
@@ -131,7 +131,7 @@ describe('Config Parsing', function () {
     })
 
     it('does not throw when a valid level is given', function () {
-        for (const level of LOG_LEVELS) {
+        for (const level of LOG_LEVEL_NAMES) {
             expect(() => parseLogOptions({level})).to.not.throw;
         }
     })
@@ -189,7 +189,7 @@ describe('Transports', function () {
             defaultLogger.debug('Test');
             const res = await race;
             expect(res).to.not.be.undefined;
-            expect(res.toString()).to.include('DEBUG: Test');
+            expect(res.toString().match(/DEBUG\s*:\s*Test/)).is.not.null;
         });
 
         it('Does NOT write to console with DEBUG when higher level is specified', async function () {
@@ -259,11 +259,11 @@ describe('Transports', function () {
                 await sleep(20);
                 const res = await race;
                 expect(res).to.not.be.undefined;
-                expect(res.toString()).to.include('DEBUG: Test');
+                expect(res.toString().match(/DEBUG\s*:\s*Test/)).is.not.null;
                 const paths = readdirSync('./logs');
                 expect(paths.length).eq(1);
                 const fileContents = readFileSync(path.resolve('./logs', paths[0])).toString();
-                expect(fileContents).includes('DEBUG: Test');
+                expect(fileContents.match(/DEBUG\s*:\s*Test/)).is.not.null;
             }, {unsafeCleanup: true});
         });
 
@@ -279,11 +279,11 @@ describe('Transports', function () {
                 await sleep(20);
                 const res = await race;
                 expect(res).to.not.be.undefined;
-                expect(res.toString()).to.include('DEBUG: Test');
+                expect(res.toString().match(/DEBUG\s*:\s*Test/)).is.not.null
                 const paths = readdirSync('./logs');
                 expect(paths.length).eq(1);
                 const fileContents = readFileSync(path.resolve('./logs', paths[0])).toString();
-                expect(fileContents).includes('DEBUG: Test');
+                expect(fileContents.match(/DEBUG\s*:\s*Test/)).is.not.null;
             }, {unsafeCleanup: true});
         });
     });
