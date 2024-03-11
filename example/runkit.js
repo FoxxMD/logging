@@ -1,7 +1,6 @@
 const logging = require('@foxxmd/logging');
 
 const {childLogger, loggerApp, loggerDebug} = logging;
-const {ErrorWithCause} = ec;
 
 const initLogger = childLogger(loggerDebug, 'Init');
 initLogger.info('Initializing Application -> v1.3.1');
