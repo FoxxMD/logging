@@ -14,7 +14,7 @@ import path from "path";
 
 
 const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
-    const opts = parseLogOptions(config);
+    const opts = parseLogOptions(config, process.cwd());
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const logger = buildLogger('debug', [
@@ -34,12 +34,19 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
     return [logger, testStream, rawStream];
 }
 
-const testFileRollingLogger = async (config?: object, logPath: string = '.') => {
-    const opts = parseLogOptions(config);
+const testFileRollingLogger = async (config?: object) => {
+    const opts = parseLogOptions(config, process.cwd());
+    const {
+        file: {
+            level,
+            path: logPath,
+            frequency
+        } = {}
+    } = opts;
     const streamEntry = await buildDestinationRollingFile(
-        opts.file.level,
+        level,
         {
-            frequency: 'daily',
+            frequency,
             path: logPath,
             ...opts
         }
@@ -49,10 +56,16 @@ const testFileRollingLogger = async (config?: object, logPath: string = '.') => 
     ]);
 };
 
-const testFileLogger = async (config?: object, logPath: string = './app.log') => {
-    const opts = parseLogOptions(config);
+const testFileLogger = async (config?: object) => {
+    const opts = parseLogOptions(config, process.cwd());
+    const {
+        file: {
+            path: logPath,
+            level,
+        } = {}
+    } = opts;
     const streamEntry = buildDestinationFile(
-        opts.file.level,
+        level,
         {
             path: logPath,
             ...opts
@@ -63,14 +76,21 @@ const testFileLogger = async (config?: object, logPath: string = './app.log') =>
     ]);
 };
 
-const testRollingAppLogger = async (config?: object, logPath: string = '.'): Promise<[Logger, Transform, Transform]> => {
-    const opts = parseLogOptions(config);
+const testRollingAppLogger = async (config?: object): Promise<[Logger, Transform, Transform]> => {
+    const opts = parseLogOptions(config, process.cwd());
+    const {
+        file: {
+            path: logPath,
+            level,
+            frequency
+        } = {}
+    } = opts;
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streamEntry = await buildDestinationRollingFile(
-        opts.file.level,
+        level,
         {
-            frequency: 'daily',
+            frequency,
             path: logPath,
             ...opts
         }
@@ -94,12 +114,18 @@ const testRollingAppLogger = async (config?: object, logPath: string = '.'): Pro
     return [logger, testStream, rawStream];
 }
 
-const testAppLogger = (config?: object, logPath: string = '.'): [Logger, Transform, Transform] => {
-    const opts = parseLogOptions(config);
+const testAppLogger = (config?: object): [Logger, Transform, Transform] => {
+    const opts = parseLogOptions(config, process.cwd());
+    const {
+        file: {
+            path: logPath,
+            level,
+        } = {}
+    } = opts;
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streamEntry = buildDestinationFile(
-        opts.file.level,
+        level,
         {
             path: logPath,
             ...opts
@@ -220,7 +246,7 @@ describe('Transports', function () {
                 const logger = await testFileRollingLogger({file: 'debug'});
                 logger.debug('Test');
                 await sleep(20);
-                expect(readdirSync('.').length).eq(1);
+                expect(readdirSync('./logs').length).eq(1);
             }, {unsafeCleanup: true});
         });
     });
@@ -241,7 +267,7 @@ describe('Transports', function () {
                 const logger = await testFileLogger({file: 'debug'});
                 logger.debug('Test');
                 await sleep(20);
-                expect(readdirSync('.').length).eq(1);
+                expect(readdirSync('./logs').length).eq(1);
             }, {unsafeCleanup: true});
         });
     });
@@ -249,8 +275,7 @@ describe('Transports', function () {
     describe('Combined', function() {
         it('It writes to rolling file and console', async function () {
             await withLocalTmpDir(async () => {
-                const logPath = './logs/app.log';
-                const [logger, testStream, rawStream] = await testRollingAppLogger({file: 'debug'}, logPath);
+                const [logger, testStream, rawStream] = await testRollingAppLogger({file: 'debug'});
                 const race = Promise.race([
                     pEvent(testStream, 'data'),
                     sleep(10)
@@ -269,8 +294,7 @@ describe('Transports', function () {
 
         it('It writes to file and console', async function () {
             await withLocalTmpDir(async () => {
-                const logPath = './logs/app.log';
-                const [logger, testStream, rawStream] = testAppLogger({file: 'debug'}, logPath);
+                const [logger, testStream, rawStream] = testAppLogger({file: 'debug'});
                 const race = Promise.race([
                     pEvent(testStream, 'data'),
                     sleep(10)

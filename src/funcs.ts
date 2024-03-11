@@ -1,6 +1,6 @@
 import process from "process";
 import {FileLogOptions, FileLogOptionsParsed, LOG_LEVEL_NAMES, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
-import {logPath, projectDir} from "./constants.js";
+import {projectDir, logPathRelative} from "./constants.js";
 import {isAbsolute, resolve} from 'node:path';
 
 export const isLogOptions = (obj: object = {}): obj is LogOptions => {
@@ -36,7 +36,7 @@ const isFileLogOptions = (obj: any): obj is FileLogOptions => {
 /**
  * Takes an object and parses it into a fully-populated LogOptions object based on opinionated defaults
  * */
-export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
+export const parseLogOptions = (config: LogOptions = {}, baseDir?: string): LogOptionsParsed => {
     if (!isLogOptions(config)) {
         throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug',  -- 'file' may be false.`)
     }
@@ -55,7 +55,7 @@ export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
         if (file.level === false) {
             fileObj = {level: false};
         } else {
-            const path = typeof file.path === 'function' ? file.path : getLogPath(file.path);
+            const path = typeof file.path === 'function' ? file.path : getLogPath(file.path, baseDir);
             fileObj = {
                 level: configLevel || defaultLevel,
                 ...file,
@@ -67,7 +67,7 @@ export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
     } else {
         fileObj = {
             level: file,
-            path: getLogPath()
+            path: getLogPath(undefined, baseDir)
         };
     }
 
@@ -83,19 +83,19 @@ export const parseLogOptions = (config: LogOptions = {}): LogOptionsParsed => {
     };
 }
 
-export const getLogPath = (path?: string) => {
+export const getLogPath = (path?: string, baseDir = projectDir) => {
     let pathVal: string;
     if (path !== undefined) {
         pathVal = path;
     } else if (typeof process.env.LOG_PATH === 'string') {
         pathVal = process.env.LOG_PATH;
     } else {
-        pathVal = logPath;
+        pathVal = logPathRelative;
     }
 
     if (isAbsolute(pathVal)) {
         return pathVal;
     }
 
-    return resolve(projectDir, pathVal);
+    return resolve(baseDir, pathVal);
 }

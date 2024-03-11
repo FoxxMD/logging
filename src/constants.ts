@@ -3,9 +3,9 @@ import process from "process";
 
 const projectDir = process.cwd();
 
-let logPath = path.resolve(projectDir, `./logs/app.log`);
+const logPathRelative = './logs/app.log';
 
 export {
-    logPath,
+    logPathRelative,
     projectDir
 }
