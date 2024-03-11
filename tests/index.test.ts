@@ -12,13 +12,16 @@ import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
 import {sleep} from "../src/util.js";
-import {LogData, LOG_LEVEL_NAMES} from "../src/types.js";
+import {LogData, LOG_LEVEL_NAMES, PRETTY_ISO8601} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
 import {buildDestinationStream, buildDestinationRollingFile, buildDestinationFile} from "../src/destinations.js";
 import {buildLogger} from "../src/loggers.js";
 import {readFileSync} from "fs";
 import path from "path";
+import dateFormatDef from "dateformat";
+
+const dateFormat = dateFormatDef as unknown as typeof dateFormatDef.default;
 
 
 const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
@@ -562,5 +565,16 @@ describe('Pretty Options', function() {
         await sleep(10);
         const formatted = (await formattedBuff).toString();
         expect(formatted).includes('DEBUG:');
+    });
+
+    it('ISO Pretty format prints correctly', async function () {
+        const [logger, testStream, rawStream] = testAppLogger({file: false}, {pretty: {translateTime: PRETTY_ISO8601}});
+        const formattedBuff = pEvent(testStream, 'data');
+
+        const dt = dateFormat(new Date(), 'isoDateTime').substring(0, 19);
+        logger.debug(`Test iso timestamp`);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).includes(dt);
     });
 });
