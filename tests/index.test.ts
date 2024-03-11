@@ -1,5 +1,13 @@
 import {describe} from "mocha";
-import {parseLogOptions, Logger, childLogger} from '../src/index.js';
+import {
+    parseLogOptions,
+    Logger,
+    childLogger,
+    LogOptions,
+    LoggerAppExtras,
+    FileLogOptions,
+    LogLevelStreamEntry, loggerAppRolling, loggerApp
+} from '../src/index.js';
 import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
@@ -80,28 +88,11 @@ const testFileLogger = async (config?: object) => {
     ]);
 };
 
-const testRollingAppLogger = async (config?: object): Promise<[Logger, Transform, Transform]> => {
+const testRollingAppLogger = async (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): Promise<[Logger, Transform, Transform]> => {
     const opts = parseLogOptions(config, process.cwd());
-    const {
-        file: {
-            path: logPath,
-            level,
-            frequency,
-            ...rest
-        } = {}
-    } = opts;
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const streamEntry = await buildDestinationRollingFile(
-        level,
-        {
-            frequency,
-            path: logPath,
-            ...opts,
-            ...rest
-        }
-    );
-    const logger = buildLogger('debug', [
+    const streams: LogLevelStreamEntry[] = [
         buildDestinationStream(
             opts.console,
             {
@@ -113,48 +104,36 @@ const testRollingAppLogger = async (config?: object): Promise<[Logger, Transform
         {
             level: opts.console,
             stream: rawStream
-        },
-        buildDestinationStream(opts.console, { destination: 1, colorize: false }),
-        streamEntry
-    ]);
+        }
+    ];
+    const {destinations = [], ...restExtras} = extras;
+    const logger = await loggerAppRolling({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], ...restExtras});
     return [logger, testStream, rawStream];
 }
 
-const testAppLogger = (config?: object): [Logger, Transform, Transform] => {
+const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): [Logger, Transform, Transform] => {
     const opts = parseLogOptions(config, process.cwd());
-    const {
-        file: {
-            path: logPath,
-            level,
-            ...rest
-        } = {}
-    } = opts;
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const streamEntry = buildDestinationFile(
-        level,
-        {
-            path: logPath,
-            ...opts,
-            ...rest
-        }
-    );
-    const logger = buildLogger('debug', [
+    const {destinations = [], pretty = {}, ...restExtras} = extras;
+
+    const streams = [
         buildDestinationStream(
             opts.console,
             {
+                ...pretty,
                 destination: testStream,
                 colorize: false,
-                ...opts
+                ...opts,
             }
         ),
         {
             level: opts.console,
             stream: rawStream
         },
-        buildDestinationStream(opts.console, { destination: 1, colorize: false }),
-        streamEntry
-    ]);
+    ];
+
+    const logger = loggerApp({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], ...pretty, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
@@ -533,5 +512,55 @@ describe('Child Logger', function() {
             expect(formatted).includes(' [Parent] ');
             expect(formatted).includes(' [Runtime] ');
         });
+    });
+});
+
+describe('Pretty Options', function() {
+    it('Redacts CWD by default', async function () {
+        const [logger, testStream, rawStream] = testAppLogger({file: false});
+        const formattedBuff = pEvent(testStream, 'data');
+        const rawBuff = pEvent(rawStream, 'data');
+        const subPath = '/a/subfolder/to/file.txt';
+        const cwdPath = path.join(process.cwd(), subPath);
+
+        logger.debug(`An example with current working directory substr ${cwdPath}`);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).does.not.includes(process.cwd());
+        expect(formatted).includes(`${path.join('CWD', subPath)}`);
+    });
+
+    it('Retains CWD when configured', async function () {
+        const [logger, testStream, rawStream] = testAppLogger({file: false}, {pretty: {redactCwd: false}});
+        const formattedBuff = pEvent(testStream, 'data');
+        const subPath = '/a/subfolder/to/file.txt';
+        const cwdPath = path.join(process.cwd(), subPath);
+
+        logger.debug(`An example with current working directory substr ${cwdPath}`);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).includes(cwdPath);
+    });
+
+    it('Pads levels by default', async function () {
+        const [logger, testStream, rawStream] = testAppLogger({file: false});
+        const formattedBuff = pEvent(testStream, 'data');
+        const rawBuff = pEvent(rawStream, 'data');
+
+        logger.debug(`Test padding`);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).includes('DEBUG  :');
+    });
+
+    it('Does not Pad levels when configured', async function () {
+        const [logger, testStream, rawStream] = testAppLogger({file: false}, {pretty: {padLevels: false}});
+        const formattedBuff = pEvent(testStream, 'data');
+        const rawBuff = pEvent(rawStream, 'data');
+
+        logger.debug(`Test padding`);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).includes('DEBUG:');
     });
 });
