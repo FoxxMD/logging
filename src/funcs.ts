@@ -11,7 +11,7 @@ export const isLogOptions = (obj: object = {}): obj is LogOptions => {
         const t = typeof val;
         if (key === 'file') {
             if (t === 'object') {
-                return isFileLogOptions(t);
+                return isFileLogOptions(val);
             }
             return t === 'string' || val === false;
         }
