@@ -520,5 +520,18 @@ describe('Child Logger', function() {
             expect(formatted).includes(' [Parent] ');
             expect(formatted).not.includes(' [Test1] ');
         });
+
+        it('merges labels when provided to log function in info object', async function () {
+            const [logger, testStream, rawStream] = testConsoleLogger();
+            const formattedBuff = pEvent(testStream, 'data');
+            const rawBuff = pEvent(rawStream, 'data');
+
+            logger.addLabel('Parent');
+            logger.debug({labels: ['Runtime']},'log something');
+            await sleep(10);
+            const formatted = (await formattedBuff).toString();
+            expect(formatted).includes(' [Parent] ');
+            expect(formatted).includes(' [Runtime] ');
+        });
     });
 });
