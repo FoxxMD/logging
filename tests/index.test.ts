@@ -40,7 +40,8 @@ const testFileRollingLogger = async (config?: object) => {
         file: {
             level,
             path: logPath,
-            frequency
+            frequency,
+            ...rest
         } = {}
     } = opts;
     const streamEntry = await buildDestinationRollingFile(
@@ -48,7 +49,8 @@ const testFileRollingLogger = async (config?: object) => {
         {
             frequency,
             path: logPath,
-            ...opts
+            ...opts,
+            ...rest
         }
     );
     return buildLogger('debug', [
@@ -62,13 +64,15 @@ const testFileLogger = async (config?: object) => {
         file: {
             path: logPath,
             level,
+            ...rest
         } = {}
     } = opts;
     const streamEntry = buildDestinationFile(
         level,
         {
             path: logPath,
-            ...opts
+            ...opts,
+            ...rest
         }
     );
     return buildLogger('debug', [
@@ -82,7 +86,8 @@ const testRollingAppLogger = async (config?: object): Promise<[Logger, Transform
         file: {
             path: logPath,
             level,
-            frequency
+            frequency,
+            ...rest
         } = {}
     } = opts;
     const testStream = new PassThrough();
@@ -92,7 +97,8 @@ const testRollingAppLogger = async (config?: object): Promise<[Logger, Transform
         {
             frequency,
             path: logPath,
-            ...opts
+            ...opts,
+            ...rest
         }
     );
     const logger = buildLogger('debug', [
@@ -120,6 +126,7 @@ const testAppLogger = (config?: object): [Logger, Transform, Transform] => {
         file: {
             path: logPath,
             level,
+            ...rest
         } = {}
     } = opts;
     const testStream = new PassThrough();
@@ -128,7 +135,8 @@ const testAppLogger = (config?: object): [Logger, Transform, Transform] => {
         level,
         {
             path: logPath,
-            ...opts
+            ...opts,
+            ...rest
         }
     );
     const logger = buildLogger('debug', [
@@ -249,6 +257,90 @@ describe('Transports', function () {
                 expect(readdirSync('./logs').length).eq(1);
             }, {unsafeCleanup: true});
         });
+
+        it('Writes to specified file', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileRollingLogger({file: { path: './myLogs.log' }});
+                logger.debug('Test');
+                await sleep(20);
+                const files = readdirSync('.');
+                expect(files.length).eq(1);
+                expect(files[0]).includes('myLogs')
+            }, {unsafeCleanup: true});
+        });
+
+        it('Writes to specified file with string function', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileRollingLogger({file: { path: () => path.resolve(process.cwd(), './logs/thisFile.log') }});
+                logger.debug('Test');
+                await sleep(20);
+                const files = readdirSync('./logs');
+                expect(files.length).eq(1);
+                expect(files[0]).eq('thisFile.1.log')
+            }, {unsafeCleanup: true});
+        });
+
+        it('Does not write frequency pattern if only size is specified', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileRollingLogger({file: { path: './myLogs.log', size: '10M' }});
+                logger.debug('Test');
+                await sleep(20);
+                const files = readdirSync('.');
+                expect(files.length).eq(1);
+                expect(files[0]).eq('myLogs.1.log')
+            }, {unsafeCleanup: true});
+        });
+
+        describe('Frequency', function() {
+
+            it('Writes to specified file with daily frequency when timestamp is auto', async function () {
+                const dt = new Date().toISOString().split('T')[0];
+                await withLocalTmpDir(async () => {
+                    const logger = await testFileRollingLogger({file: { path: './myLogs.log', frequency: 'daily' }});
+                    logger.debug('Test');
+                    await sleep(20);
+                    const files = readdirSync('.');
+                    expect(files.length).eq(1);
+                    expect(files[0]).eq(`myLogs-${dt}.1.log`)
+                }, {unsafeCleanup: true});
+            });
+
+            it('Writes to specified file with iso for other frequencies when timestamp is auto', async function () {
+                const dt = new Date().toISOString().substring(0, 19);
+                await withLocalTmpDir(async () => {
+                    const logger = await testFileRollingLogger({file: { path: './myLogs.log', frequency: 'hourly' }});
+                    logger.debug('Test');
+                    await sleep(20);
+                    const files = readdirSync('.');
+                    expect(files.length).eq(1);
+                    expect(files[0]).includes(`myLogs-${dt}`)
+                }, {unsafeCleanup: true});
+            });
+
+            it('Writes to specified file with unix timestamp when configured', async function () {
+                const dt = Date.now().toString().substring(0,11);
+                await withLocalTmpDir(async () => {
+                    const logger = await testFileRollingLogger({file: { path: './myLogs.log', frequency: 'hourly', timestamp: 'unix' }});
+                    logger.debug('Test');
+                    await sleep(20);
+                    const files = readdirSync('.');
+                    expect(files.length).eq(1);
+                    expect(files[0]).includes(`myLogs-${dt}`)
+                }, {unsafeCleanup: true});
+            });
+
+            it('Writes to specified file with iso when timestamp is iso', async function () {
+                const dt = new Date().toISOString().substring(0, 19);
+                await withLocalTmpDir(async () => {
+                    const logger = await testFileRollingLogger({file: { path: './myLogs.log', frequency: 'daily', timestamp: 'iso' }});
+                    logger.debug('Test');
+                    await sleep(20);
+                    const files = readdirSync('.');
+                    expect(files.length).eq(1);
+                    expect(files[0]).includes(`myLogs-${dt}`)
+                }, {unsafeCleanup: true});
+            });
+        });
     });
 
     describe('File', async function () {
@@ -268,6 +360,17 @@ describe('Transports', function () {
                 logger.debug('Test');
                 await sleep(20);
                 expect(readdirSync('./logs').length).eq(1);
+            }, {unsafeCleanup: true});
+        });
+
+        it('Writes to specified file path', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileLogger({file: { path: './myLogs.log' }});
+                logger.debug('Test');
+                await sleep(20);
+                const files = readdirSync('.');
+                expect(files.length).eq(1);
+                expect(files[0]).eq('myLogs.log')
             }, {unsafeCleanup: true});
         });
     });
