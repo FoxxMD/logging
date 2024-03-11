@@ -1,5 +1,4 @@
 const logging = require('@foxxmd/logging');
-const ec = require('pony-cause');
 
 const {childLogger, loggerApp, loggerDebug} = logging;
 const {ErrorWithCause} = ec;
@@ -25,7 +24,7 @@ siblingLogger.info('Widget allocation has initiated');
 logger.debug({myProp: 'a string', nested: {anotherProps: ['val1', 'val2'], boolProp: true}}, 'Test');
 
 const er = new Error('A configuration error occurred');
-const causeErr = new ErrorWithCause('Service C did not start', {cause: er});
+const causeErr = new Error('Service C did not start', {cause: er});
 logger.error(causeErr);
 
 logger.verbose('(1) service failed to start but is non-essential...continuing startup')

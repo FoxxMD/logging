@@ -10,7 +10,7 @@ import {build} from "pino-pretty"
 import {PRETTY_OPTS_CONSOLE, PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
-import {ErrorWithCause} from "pony-cause";
+
 
 const pRoll = pinoRoll as unknown as typeof pinoRoll.default;
 
@@ -38,7 +38,7 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
     try {
         fileOrDirectoryIsWriteable(testPath);
     }  catch (e: any) {
-        throw new ErrorWithCause<Error>('Cannot write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e as Error});
+        throw new Error('Cannot write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e});
     }
 
     const pInfo = path.parse(testPath);
@@ -97,7 +97,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
             stream: build({...prettyOptsFileFactory(rest), ...rest, destination: dest})
         };
     } catch (e: any) {
-        throw new ErrorWithCause<Error>('WILL NOT write to file due to an error while trying to access the specified directory', {cause: e as Error});
+        throw new Error('WILL NOT write to file due to an error while trying to access the specified directory', {cause: e});
     }
 }
 

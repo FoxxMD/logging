@@ -1,5 +1,4 @@
 import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry, Level} from 'pino';
-import {ErrorWithCause} from "pony-cause";
 import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
 
@@ -75,7 +74,7 @@ export type LogData = Record<string, any> & {
     pid: number
     hostname: string
     labels: any[]
-    msg: string | Error | ErrorWithCause
+    msg: string | Error
 }
 
 export interface PinoRollOptions {

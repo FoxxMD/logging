@@ -1,6 +1,5 @@
 import pathUtil from "path";
 import {accessSync, constants} from "fs";
-import {ErrorWithCause} from "pony-cause";
 import process from "process";
 
 export const fileOrDirectoryIsWriteable = (location: string) => {
@@ -36,12 +35,12 @@ export const fileOrDirectoryIsWriteable = (location: string) => {
                 // also can't access directory :(
                 throw new Error(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application does not have permission to write to the parent directory`);
             } else {
-                throw new ErrorWithCause(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application is unable to access the parent directory due to a system error`, {cause: accessError});
+                throw new Error(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application is unable to access the parent directory due to a system error`, {cause: accessError});
             }
         } else if (code === 'EACCES') {
             throw new Error(`${isDir ? 'Directory' : 'File'} exists at ${location} but application does not have permission to write to it.`);
         } else {
-            throw new ErrorWithCause(`${isDir ? 'Directory' : 'File'} exists at ${location} but application is unable to access it due to a system error`, {cause: err});
+            throw new Error(`${isDir ? 'Directory' : 'File'} exists at ${location} but application is unable to access it due to a system error`, {cause: err});
         }
     }
 }
