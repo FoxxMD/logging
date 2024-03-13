@@ -5,7 +5,6 @@ import {
     childLogger,
     LogOptions,
     LoggerAppExtras,
-    FileLogOptions,
     LogLevelStreamEntry, loggerAppRolling, loggerApp
 } from '../src/index.js';
 import {PassThrough, Transform} from "node:stream";

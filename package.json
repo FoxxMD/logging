@@ -64,7 +64,7 @@
     "typedoc-plugin-missing-exports": "^2.2.0",
     "typedoc-plugin-replace-text": "^3.3.0",
     "typescript": "^5.3.3",
-    "with-local-tmp-dir": "^5.0.1"
+    "with-local-tmp-dir": "^5.1.1"
   },
   "dependencies": {
     "pino": "^8.19.0",
