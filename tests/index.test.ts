@@ -108,8 +108,8 @@ const testRollingAppLogger = async (config: LogOptions | object = {}, extras: Lo
             stream: rawStream
         }
     ];
-    const {destinations = [], ...restExtras} = extras;
-    const logger = await loggerAppRolling({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], ...restExtras});
+    const {destinations = [], pretty, ...restExtras} = extras;
+    const logger = await loggerAppRolling({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
@@ -135,7 +135,7 @@ const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras
         },
     ];
 
-    const logger = loggerApp({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], ...pretty, ...restExtras});
+    const logger = loggerApp({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, ...restExtras});
     return [logger, testStream, rawStream];
 }
 

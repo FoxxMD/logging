@@ -1,4 +1,4 @@
-import {PrettyOptions} from "pino-pretty";
+import {PrettyOptions} from "@foxxmd/pino-pretty";
 import {CWD, getLongestStr} from "./util.js";
 import {
     LOG_LEVEL_NAMES,

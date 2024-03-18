@@ -1,4 +1,4 @@
-import pinoRoll from 'pino-roll';
+import pinoRoll from '@foxxmd/pino-roll';
 import {
     LogLevelStreamEntry,
     LogLevel,
@@ -6,7 +6,7 @@ import {
     FileDestination,
 } from "./types.js";
 import {DestinationStream, pino, destination} from "pino";
-import {build} from "pino-pretty"
+import {build} from "@foxxmd/pino-pretty"
 import {PRETTY_OPTS_CONSOLE, PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
