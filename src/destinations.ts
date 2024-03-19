@@ -1,4 +1,4 @@
-import pinoRoll from '@foxxmd/pino-roll';
+import pinoRoll from 'pino-roll';
 import {
     LogLevelStreamEntry,
     LogLevel,
