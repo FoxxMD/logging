@@ -1,7 +1,7 @@
 {
   "name": "@foxxmd/logging",
   "type": "module",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "repository": "https://github.com/foxxmd/logging",
   "description": "A typed, opinionated, batteries-included, Pino-based logging solution for backend TS/JS projects",
   "scripts": {

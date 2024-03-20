@@ -44,8 +44,8 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
     return [logger, testStream, rawStream];
 }
 
-const testFileRollingLogger = async (config?: object) => {
-    const opts = parseLogOptions(config, process.cwd());
+const testFileRollingLogger = async (config?: object, logBaseDir = process.cwd()) => {
+    const opts = parseLogOptions(config, logBaseDir);
     const {
         file: {
             level,
@@ -68,8 +68,8 @@ const testFileRollingLogger = async (config?: object) => {
     ]);
 };
 
-const testFileLogger = async (config?: object) => {
-    const opts = parseLogOptions(config, process.cwd());
+const testFileLogger = async (config?: object, logBaseDir = process.cwd()) => {
+    const opts = parseLogOptions(config, logBaseDir);
     const {
         file: {
             path: logPath,
@@ -91,7 +91,8 @@ const testFileLogger = async (config?: object) => {
 };
 
 const testRollingAppLogger = async (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): Promise<[Logger, Transform, Transform]> => {
-    const opts = parseLogOptions(config, process.cwd());
+    const {destinations = [], pretty, logBaseDir = process.cwd(), ...restExtras} = extras;
+    const opts = parseLogOptions(config, logBaseDir);
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streams: LogLevelStreamEntry[] = [
@@ -108,16 +109,17 @@ const testRollingAppLogger = async (config: LogOptions | object = {}, extras: Lo
             stream: rawStream
         }
     ];
-    const {destinations = [], pretty, ...restExtras} = extras;
-    const logger = await loggerAppRolling({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, ...restExtras});
+    const logger = await loggerAppRolling({...config, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
 const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): [Logger, Transform, Transform] => {
-    const opts = parseLogOptions(config, process.cwd());
+    const {destinations = [], pretty = {}, logBaseDir = process.cwd(), ...restExtras} = extras;
+
+    const opts = parseLogOptions(config, logBaseDir);
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const {destinations = [], pretty = {}, ...restExtras} = extras;
+
 
     const streams = [
         buildDestinationStream(
@@ -134,8 +136,7 @@ const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras
             stream: rawStream
         },
     ];
-
-    const logger = loggerApp({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, ...restExtras});
+    const logger = loggerApp({...config, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
@@ -216,6 +217,38 @@ describe('Transports', function () {
             defaultLogger.debug('Test');
             const res = await race;
             expect(res).to.be.undefined;
+        });
+    });
+
+    describe('File', async function () {
+
+        it('Does NOT write to file when file is false', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await  testFileLogger({file: false});
+                logger.debug('Test');
+                await sleep(20);
+                expect(readdirSync('.').length).eq(0);
+            }, {unsafeCleanup: false});
+        });
+
+        it('Writes to file when file level is valid', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileLogger({file: 'debug'});
+                logger.debug('Test');
+                await sleep(20);
+                expect(readdirSync('./logs').length).eq(1);
+            }, {unsafeCleanup: true});
+        });
+
+        it('Writes to specified file path', async function () {
+            await withLocalTmpDir(async () => {
+                const logger = await testFileLogger({file: { path: './myLogs.log' }});
+                logger.debug('Test');
+                await sleep(20);
+                const files = readdirSync('.');
+                expect(files.length).eq(1);
+                expect(files[0]).eq('myLogs.log')
+            }, {unsafeCleanup: true});
         });
     });
 
@@ -324,38 +357,6 @@ describe('Transports', function () {
         });
     });
 
-    describe('File', async function () {
-
-        it('Does NOT write to file when file is false', async function () {
-            await withLocalTmpDir(async () => {
-                const logger = await  testFileLogger({file: false});
-                logger.debug('Test');
-                await sleep(20);
-                expect(readdirSync('.').length).eq(0);
-            }, {unsafeCleanup: false});
-        });
-
-        it('Writes to file when file level is valid', async function () {
-            await withLocalTmpDir(async () => {
-                const logger = await testFileLogger({file: 'debug'});
-                logger.debug('Test');
-                await sleep(20);
-                expect(readdirSync('./logs').length).eq(1);
-            }, {unsafeCleanup: true});
-        });
-
-        it('Writes to specified file path', async function () {
-            await withLocalTmpDir(async () => {
-                const logger = await testFileLogger({file: { path: './myLogs.log' }});
-                logger.debug('Test');
-                await sleep(20);
-                const files = readdirSync('.');
-                expect(files.length).eq(1);
-                expect(files[0]).eq('myLogs.log')
-            }, {unsafeCleanup: true});
-        });
-    });
-
     describe('Combined', function() {
         it('It writes to rolling file and console', async function () {
             await withLocalTmpDir(async () => {
@@ -392,6 +393,21 @@ describe('Transports', function () {
                 expect(paths.length).eq(1);
                 const fileContents = readFileSync(path.resolve('./logs', paths[0])).toString();
                 expect(fileContents.match(/DEBUG\s*:\s*Test/)).is.not.null;
+            }, {unsafeCleanup: true});
+        });
+
+        it('It writes to file with a different base dir', async function () {
+            await withLocalTmpDir(async () => {
+                const [logger, testStream, rawStream] = testAppLogger({file: 'debug'}, {logBaseDir: path.resolve(process.cwd(), './config/logs')});
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                logger.debug('Test');
+                await sleep(20);
+                const res = await race;
+                const paths = readdirSync('./config/logs');
+                expect(paths.length).eq(1);
             }, {unsafeCleanup: true});
         });
     });

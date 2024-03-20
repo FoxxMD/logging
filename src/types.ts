@@ -129,9 +129,10 @@ export interface FileOptions extends PinoRollOptions, RollOptions {
      *
      * May also be specified using env LOG_PATH or a function that returns a string.
      *
-     * If path is relative the absolute path will be derived from the current working directory.
+     * If path is relative the absolute path will be derived from `logBaseDir` (in `LoggerAppExtras`) which defaults to CWD
      *
-     * @default 'CWD/logs/app.log'
+     * @default './logs/app.log'
+     * @see LoggerAppExtras
      * */
     path?: string | (() => string)
 }
@@ -170,6 +171,15 @@ export interface LoggerAppExtras {
      * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
      * */
     pino?: PinoLoggerOptions
+
+    /**
+     * The base path to use when parsing file logging options.
+     *
+     * @see FileOptions
+     *
+     * @default 'CWD'
+     * */
+    logBaseDir?: string
 }
 
 /**
