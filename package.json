@@ -1,7 +1,7 @@
 {
   "name": "@foxxmd/logging",
   "type": "module",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "repository": "https://github.com/foxxmd/logging",
   "description": "A typed, opinionated, batteries-included, Pino-based logging solution for backend TS/JS projects",
   "scripts": {
@@ -67,8 +67,8 @@
     "with-local-tmp-dir": "^5.1.1"
   },
   "dependencies": {
-    "@foxxmd/pino-pretty": "^10.3.2",
     "pino": "^8.19.0",
+    "pino-pretty": "^11.0.0",
     "pino-roll": "^1.0.1"
   },
   "overrides": {

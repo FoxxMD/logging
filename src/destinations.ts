@@ -5,9 +5,9 @@ import {
     StreamDestination,
     FileDestination,
 } from "./types.js";
-import {DestinationStream, pino, destination} from "pino";
-import {build} from "@foxxmd/pino-pretty"
-import {PRETTY_OPTS_CONSOLE, PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
+import {destination} from "pino";
+import {build} from "pino-pretty"
+import {PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
 import {fileOrDirectoryIsWriteable} from "./util.js";
 import path from "path";
 

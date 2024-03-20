@@ -1,5 +1,5 @@
 import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry, Level} from 'pino';
-import {PrettyOptions} from "@foxxmd/pino-pretty";
+import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
 
 export type LogLevel = typeof LOG_LEVEL_NAMES[number];
