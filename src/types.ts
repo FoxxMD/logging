@@ -77,6 +77,10 @@ export type LogData = Record<string, any> & {
     msg: string | Error
 }
 
+export type LogDataPretty = LogData & {
+    line: string
+}
+
 export interface PinoRollOptions {
     /**
      * The maximum size of a given rolling log file.

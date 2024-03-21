@@ -4,6 +4,7 @@ import {
     LogOptions,
     FileLogOptions,
     LogData,
+    LogDataPretty,
     LogLevel,
     LOG_LEVEL_NAMES,
     LoggerAppExtras,
@@ -23,6 +24,7 @@ export type {
     LogLevelStreamEntry,
     LogOptions,
     LogData,
+    LogDataPretty,
     LogLevel,
     LoggerAppExtras,
     PrettyOptionsExtra
