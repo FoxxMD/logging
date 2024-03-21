@@ -60,3 +60,15 @@ export const getLongestStr = (levels: string[]): number => {
     }
     return longest;
 }
+
+export function parseBool<T = undefined>(value: any, defaultVal: T = undefined): boolean | T {
+    if (value === undefined || value === '') {
+        return defaultVal
+    }
+    if (typeof value === 'string') {
+        return ['1','true','yes'].includes(value.toLocaleLowerCase().trim());
+    } else if (typeof value === 'boolean') {
+        return value;
+    }
+    throw new Error(`'${value.toString()}' is not a boolean value.`);
+}

@@ -8,7 +8,7 @@ import {
 import {destination, DestinationStream} from "pino";
 import {build, prettyFactory} from "pino-pretty"
 import {PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
-import {fileOrDirectoryIsWriteable} from "./util.js";
+import {fileOrDirectoryIsWriteable, parseBool} from "./util.js";
 import path from "path";
 import {Transform, TransformCallback} from "node:stream";
 import pump from 'pump';
@@ -185,6 +185,21 @@ export const buildDestinationJsonPrettyStream = (level: LogLevel, options: JsonP
     }
 }
 
+// docker stdout/err only colorizes if run with `-it` flag or `tty: true` in docker-compose
+// but most common outputs and web log viewers (portainer, dozzle) support colors and using those flags/options is not common for most users
+// so
+// can use COLORED_STD=true hint in Dockerfile to coerce colorizing output when running in a docker container.
+// and using this instead of FORCE_COLOR (used by colorette) so that we only affect console output instead of all streams
+// and value must evaluate to a truthy value to allow users to disable easily
+const coloredEnv = process.env.COLORED_STD;
+const coloredConsole = (coloredEnv === undefined || coloredEnv === '') ? undefined : parseBool(coloredEnv);
+const prettyColorizeEnv: {colorize?: boolean} = {};
+// colorette only does autodetection if `colorize` prop is not present *at all*, rather than just being undefined
+// so need to use default object and only add if we detect there is a non-empty value
+if(coloredConsole !== undefined) {
+    prettyColorizeEnv.colorize = coloredConsole;
+}
+
 /**
  * Creates a `LogLevelStreamEntry` stream that writes to STDOUT at or above the minimum `level`
  *
@@ -192,7 +207,7 @@ export const buildDestinationJsonPrettyStream = (level: LogLevel, options: JsonP
  * @see buildDestinationStream
  * */
 export const buildDestinationStdout = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
-    const opts = {...options, destination: destination({dest: 1, sync: true})}
+    const opts = {...prettyColorizeEnv, ...options, destination: destination({dest: 1, sync: true})}
     return buildDestinationStream(level, opts);
 }
 
@@ -203,6 +218,6 @@ export const buildDestinationStdout = (level: LogLevel, options: Omit<StreamDest
  * @see buildDestinationStream
  * */
 export const buildDestinationStderr = (level: LogLevel, options: Omit<StreamDestination, 'destination'> = {}): LogLevelStreamEntry => {
-    const opts = {...options, destination: destination({dest: 2, sync: true})};
+    const opts = {...prettyColorizeEnv, ...options, destination: destination({dest: 2, sync: true})};
     return buildDestinationStream(level, opts);
 }

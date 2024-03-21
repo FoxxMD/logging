@@ -172,6 +172,14 @@ logger.debug('Test');
 
 See [Building A Logger](#building-a-logger) for more information.
 
+#### Colorizing Docker Logs
+
+Color output to STD out/err is normally automatically detected by [colorette](https://github.com/jorgebucaran/colorette) or can manually be set using `colorize` anywhere [PrettyOptions](https://foxxmd.github.io/logging/interfaces/factory._internal_.PrettyOptions_.html) are accepted. However docker output can be hard to detect as supporting colorizing, or the output may not be TTY at the container interface but is viewed by a terminal or web app that does support colorizing.
+
+Therefore `@foxxmd/logging` will look for a `COLORED_STD` environmental variable and, if no other `colorize` option is set _and the ENV is not empty_, will use the truthy value of this variable to set `colorize` **for any `buildDestinationStdout` or `buildDestinationStderr` transports.** This includes the built-in stdout transports for `loggerApp` and `loggerAppRolling`.
+
+Thus you could set `COLORED_STD=true` in your Dockerfile to coerce colored output to docker logs. If a user does not want colored output for any reason they can simply override the environmental variable like `COLORED_STD=false`
+
 ## Usage
 
 ### Child Loggers
