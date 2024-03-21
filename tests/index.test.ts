@@ -14,7 +14,12 @@ import {sleep} from "../src/util.js";
 import {LogData, LOG_LEVEL_NAMES, PRETTY_ISO8601} from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
-import {buildDestinationStream, buildDestinationRollingFile, buildDestinationFile} from "../src/destinations.js";
+import {
+    buildDestinationStream,
+    buildDestinationRollingFile,
+    buildDestinationFile,
+    buildDestinationJsonPrettyStream
+} from "../src/destinations.js";
 import {buildLogger} from "../src/loggers.js";
 import {readFileSync} from "fs";
 import path from "path";
@@ -32,6 +37,28 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
             opts.console,
             {
                 destination: testStream,
+                colorize: false,
+                ...opts
+            }
+        ),
+        {
+            level: opts.console,
+            stream: rawStream
+        }
+    ]);
+    return [logger, testStream, rawStream];
+}
+
+const testObjectLogger = (config?: object, object?: boolean): [Logger, Transform, Transform] => {
+    const opts = parseLogOptions(config, process.cwd());
+    const testStream = new PassThrough({objectMode: true});
+    const rawStream = new PassThrough();
+    const logger = buildLogger('debug', [
+        buildDestinationJsonPrettyStream(
+            opts.console,
+            {
+                destination: testStream,
+                object,
                 colorize: false,
                 ...opts
             }
@@ -217,6 +244,33 @@ describe('Transports', function () {
             defaultLogger.debug('Test');
             const res = await race;
             expect(res).to.be.undefined;
+        });
+    });
+
+    describe('Pretty Object Stream', function () {
+        it('Writes pretty line to stream as jsonified object', async function () {
+            const [defaultLogger, testStream] = testObjectLogger(undefined, false);
+            const race = Promise.race([
+                pEvent(testStream, 'data'),
+                sleep(10)
+            ]) as Promise<object>;
+            defaultLogger.debug('Test');
+            const res = (await race).toString();
+            expect(res).to.not.be.undefined;
+            expect(res).match(/"line":".*\sDEBUG\s*:\s*Test"/).is.not.null;
+        });
+
+        it('Writes pretty line to stream as object', async function () {
+            const [defaultLogger, testStream] = testObjectLogger(undefined, true);
+            const race = Promise.race([
+                pEvent(testStream, 'data'),
+                sleep(10)
+            ]) as Promise<LogData>;
+            defaultLogger.debug('Test');
+            const res = await race;
+            expect(res).to.not.be.undefined;
+            expect(res.line).to.not.be.undefined;
+            expect(res.line).match(/DEBUG\s*:\s*Test/).is.not.null;
         });
     });
 

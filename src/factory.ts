@@ -9,13 +9,14 @@ import {
 } from "./pretty.js";
 import {
     buildDestinationStream,
+    buildDestinationJsonPrettyStream,
     buildDestinationRollingFile,
     buildDestinationStdout,
     buildDestinationStderr,
     buildDestinationFile
 } from "./destinations.js";
 import {buildLogger} from './loggers.js';
-import {FileDestination, PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_ISO8601, StreamDestination} from './types.js'
+import {FileDestination, PRETTY_COLORS, PRETTY_COLORS_STR, PRETTY_ISO8601, StreamDestination, JsonPrettyDestination} from './types.js'
 
 export {
     PRETTY_OPTS_CONSOLE,
@@ -29,6 +30,7 @@ export {
     prettyOptsFileFactory,
     prettyOptsConsoleFactory,
     buildDestinationStream,
+    buildDestinationJsonPrettyStream,
     buildDestinationStdout,
     buildDestinationStderr,
     buildDestinationFile,
@@ -38,5 +40,6 @@ export {
 
 export type {
     FileDestination,
-    StreamDestination
+    StreamDestination,
+    JsonPrettyDestination
 }

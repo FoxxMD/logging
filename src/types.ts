@@ -155,6 +155,12 @@ export type FileLogOptionsParsed = (Omit<FileLogOptions, 'file'> & {level: false
 
 export type FileDestination =    Omit<PrettyOptionsExtra, 'destination' | 'sync'> & FileOptionsParsed;
 export type StreamDestination =  Omit<PrettyOptionsExtra, 'destination'> & {destination: number | DestinationStream | NodeJS.WritableStream};
+export type JsonPrettyDestination =  StreamDestination & {
+    /**
+     * Specify if the stream should output log as object or stringified JSON
+     * */
+    object?: boolean
+};
 
 export type LogOptionsParsed = Omit<Required<LogOptions>, 'file'> & { file: FileLogOptionsParsed }
 
