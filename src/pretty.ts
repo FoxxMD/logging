@@ -41,7 +41,8 @@ export const prettyOptsFactory = (opts: PrettyOptionsExtra = {}): PrettyOptions 
             const labels: string[] = log.labels as string[] ?? [];
             const labelContent = labels.length === 0 ? '' : `${labels.map((x: string) => colors.blackBright(`[${x}]`)).join(' ')} `;
             const msg = redactFunc((log[messageKey] as string));
-            const stackTrace = log.err !== undefined ? redactFunc(`\n${(log.err as any).stack}`) : '';
+            let stackTrace = log.err !== undefined ? redactFunc(`\n${(log.err as any).stack}`) : '';
+            stackTrace = stackTrace.replaceAll(/^\s+at\s.+$/gm, (match) => `${colors.blackBright(match)}`) //$&
             return `${labelContent}${msg}${stackTrace}`;
         },
         hideObject: false,

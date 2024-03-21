@@ -28,7 +28,7 @@ import dateFormatDef from "dateformat";
 const dateFormat = dateFormatDef as unknown as typeof dateFormatDef.default;
 
 
-const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
+const testConsoleLogger = (config?: object, colorize = false): [Logger, Transform, Transform] => {
     const opts = parseLogOptions(config, process.cwd());
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
@@ -37,7 +37,7 @@ const testConsoleLogger = (config?: object): [Logger, Transform, Transform] => {
             opts.console,
             {
                 destination: testStream,
-                colorize: false,
+                colorize,
                 ...opts
             }
         ),
@@ -584,6 +584,22 @@ describe('Child Logger', function() {
             expect(formatted).includes(' [Parent] ');
             expect(formatted).includes(' [Runtime] ');
         });
+    });
+});
+
+describe('Pretty Features', function () {
+    const [logger, testStream, rawStream] = testConsoleLogger(undefined, true);
+    it('colors error stack traces', async function () {
+        const formattedBuff = pEvent(testStream, 'data');
+
+        const rootError = new Error('The root error message');
+        const topError = new Error('The top error message', {cause: rootError});
+
+        logger.error(topError);
+        await sleep(10);
+        const formatted = (await formattedBuff).toString();
+        expect(formatted).to.not.be.undefined;
+        expect(formatted.match(/^\s+at\s.+$/gm)).to.be.null;
     });
 });
 
