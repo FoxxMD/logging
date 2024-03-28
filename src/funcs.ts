@@ -1,5 +1,13 @@
 import process from "process";
-import {FileLogOptions, FileLogOptionsParsed, LOG_LEVEL_NAMES, LogLevel, LogOptions, LogOptionsParsed} from "./types.js";
+import {
+    FileLogOptions,
+    FileLogOptionsParsed,
+    FileLogPathOptions,
+    LOG_LEVEL_NAMES,
+    LogLevel,
+    LogOptions,
+    LogOptionsParsed
+} from "./types.js";
 import {projectDir, logPathRelative} from "./constants.js";
 import {isAbsolute, resolve} from 'node:path';
 
@@ -36,7 +44,7 @@ const isFileLogOptions = (obj: any): obj is FileLogOptions => {
 /**
  * Takes an object and parses it into a fully-populated LogOptions object based on opinionated defaults
  * */
-export const parseLogOptions = (config: LogOptions = {}, baseDir?: string): LogOptionsParsed => {
+export const parseLogOptions = (config: LogOptions = {}, options?: FileLogPathOptions): LogOptionsParsed => {
     if (!isLogOptions(config)) {
         throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug',  -- 'file' may be false.`)
     }
@@ -55,7 +63,7 @@ export const parseLogOptions = (config: LogOptions = {}, baseDir?: string): LogO
         if (file.level === false) {
             fileObj = {level: false};
         } else {
-            const path = typeof file.path === 'function' ? file.path : getLogPath(file.path, baseDir);
+            const path = typeof file.path === 'function' ? file.path : getLogPath(file.path, options);
             fileObj = {
                 level: configLevel || defaultLevel,
                 ...file,
@@ -67,7 +75,7 @@ export const parseLogOptions = (config: LogOptions = {}, baseDir?: string): LogO
     } else {
         fileObj = {
             level: file,
-            path: getLogPath(undefined, baseDir)
+            path: getLogPath(undefined, options)
         };
     }
 
@@ -83,14 +91,18 @@ export const parseLogOptions = (config: LogOptions = {}, baseDir?: string): LogO
     };
 }
 
-export const getLogPath = (path?: string, baseDir = projectDir) => {
+export const getLogPath = (path?: string, options: FileLogPathOptions = {}) => {
+    const {
+        logBaseDir: baseDir = projectDir,
+        logDefaultPath = logPathRelative
+    } = options;
     let pathVal: string;
     if (path !== undefined) {
         pathVal = path;
     } else if (typeof process.env.LOG_PATH === 'string') {
         pathVal = process.env.LOG_PATH;
     } else {
-        pathVal = logPathRelative;
+        pathVal = logDefaultPath;
     }
 
     if (isAbsolute(pathVal)) {

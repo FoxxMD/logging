@@ -98,10 +98,9 @@ export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppEx
         pretty = {},
         destinations = [],
         pino,
-        logBaseDir
     } = extras || {};
 
-    const options = parseLogOptions(config, logBaseDir);
+    const options = parseLogOptions(config, extras);
     const streams: LogLevelStreamEntry[] = [
         buildDestinationStdout(options.console, pretty),
         ...destinations
@@ -135,10 +134,9 @@ export const loggerAppRolling = async (config: LogOptions | object = {}, extras?
         pretty = {},
         destinations = [],
         pino,
-        logBaseDir
     } = extras || {};
 
-    const options = parseLogOptions(config, logBaseDir);
+    const options = parseLogOptions(config, extras);
     const streams: LogLevelStreamEntry[] = [
         buildDestinationStdout(options.console, pretty),
         ...destinations

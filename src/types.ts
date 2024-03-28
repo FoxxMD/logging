@@ -222,10 +222,31 @@ export type JsonPrettyDestination =  StreamDestination & {
 
 export type LogOptionsParsed = Omit<Required<LogOptions>, 'file'> & { file: FileLogOptionsParsed }
 
+export interface FileLogPathOptions {
+    /**
+     * The base path to use when parsing file logging options.
+     *
+     * @see FileOptions
+     *
+     * @default 'CWD'
+     * */
+    logBaseDir?: string
+    /**
+     * The default path to use when parsing file logging options.
+     *
+     * If this path is relative it is joined with `logBaseDir`
+     *
+     * @see FileOptions
+     *
+     * @default './logs/app.log'
+     * */
+    logDefaultPath?: string
+}
+
 /**
  * Additional settings and Pino Transports to apply to the returned Logger.
  * */
-export interface LoggerAppExtras {
+export interface LoggerAppExtras extends FileLogPathOptions {
     /**
      * Additional pino-pretty options that are applied to the built-in console/log streams
      * */
@@ -238,15 +259,6 @@ export interface LoggerAppExtras {
      * Additional [Pino Log options](https://getpino.io/#/docs/api?id=options) that are passed to `pino()` on logger creation
      * */
     pino?: PinoLoggerOptions
-
-    /**
-     * The base path to use when parsing file logging options.
-     *
-     * @see FileOptions
-     *
-     * @default 'CWD'
-     * */
-    logBaseDir?: string
 }
 
 /**

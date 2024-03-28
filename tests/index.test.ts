@@ -11,7 +11,7 @@ import {PassThrough, Transform} from "node:stream";
 import chai, {expect} from "chai";
 import {pEvent} from 'p-event';
 import {sleep} from "../src/util.js";
-import {LogData, LOG_LEVEL_NAMES, PRETTY_ISO8601} from "../src/types.js";
+import { LogData, LOG_LEVEL_NAMES, PRETTY_ISO8601, FileLogPathOptions } from "../src/types.js";
 import withLocalTmpDir from 'with-local-tmp-dir';
 import {readdirSync,} from 'node:fs';
 import {
@@ -29,7 +29,7 @@ const dateFormat = dateFormatDef as unknown as typeof dateFormatDef.default;
 
 
 const testConsoleLogger = (config?: object, colorize = false): [Logger, Transform, Transform] => {
-    const opts = parseLogOptions(config, process.cwd());
+    const opts = parseLogOptions(config, {logBaseDir: process.cwd()});
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const logger = buildLogger('debug', [
@@ -50,7 +50,7 @@ const testConsoleLogger = (config?: object, colorize = false): [Logger, Transfor
 }
 
 const testObjectLogger = (config?: object, object?: boolean): [Logger, Transform, Transform] => {
-    const opts = parseLogOptions(config, process.cwd());
+    const opts = parseLogOptions(config, {logBaseDir: process.cwd()});
     const testStream = new PassThrough({objectMode: true});
     const rawStream = new PassThrough();
     const logger = buildLogger('debug', [
@@ -71,8 +71,12 @@ const testObjectLogger = (config?: object, object?: boolean): [Logger, Transform
     return [logger, testStream, rawStream];
 }
 
-const testFileRollingLogger = async (config?: object, logBaseDir = process.cwd()) => {
-    const opts = parseLogOptions(config, logBaseDir);
+const testFileRollingLogger = async (config?: object, options: FileLogPathOptions = {}) => {
+    const fileOpts: FileLogPathOptions = {
+        logBaseDir: process.cwd(),
+        ...options
+    }
+    const opts = parseLogOptions(config, fileOpts);
     const {
         file: {
             level,
@@ -95,8 +99,12 @@ const testFileRollingLogger = async (config?: object, logBaseDir = process.cwd()
     ]);
 };
 
-const testFileLogger = async (config?: object, logBaseDir = process.cwd()) => {
-    const opts = parseLogOptions(config, logBaseDir);
+const testFileLogger = async (config?: object, options: FileLogPathOptions = {}) => {
+    const fileOpts: FileLogPathOptions = {
+        logBaseDir: process.cwd(),
+        ...options
+    }
+    const opts = parseLogOptions(config, fileOpts);
     const {
         file: {
             path: logPath,
@@ -118,8 +126,8 @@ const testFileLogger = async (config?: object, logBaseDir = process.cwd()) => {
 };
 
 const testRollingAppLogger = async (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): Promise<[Logger, Transform, Transform]> => {
-    const {destinations = [], pretty, logBaseDir = process.cwd(), ...restExtras} = extras;
-    const opts = parseLogOptions(config, logBaseDir);
+    const {destinations = [], pretty, logBaseDir, ...restExtras} = extras;
+    const opts = parseLogOptions(config, {logBaseDir: process.cwd(), ...extras});
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
     const streams: LogLevelStreamEntry[] = [
@@ -136,14 +144,13 @@ const testRollingAppLogger = async (config: LogOptions | object = {}, extras: Lo
             stream: rawStream
         }
     ];
-    const logger = await loggerAppRolling({...config, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
+    const logger = await loggerAppRolling({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
 const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras = {}): [Logger, Transform, Transform] => {
-    const {destinations = [], pretty = {}, logBaseDir = process.cwd(), ...restExtras} = extras;
-
-    const opts = parseLogOptions(config, logBaseDir);
+    const {destinations = [], pretty = {}, logBaseDir, ...restExtras} = extras;
+    const opts = parseLogOptions(config, {logBaseDir: process.cwd(), ...extras});
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
 
@@ -163,7 +170,7 @@ const testAppLogger = (config: LogOptions | object = {}, extras: LoggerAppExtras
             stream: rawStream
         },
     ];
-    const logger = loggerApp({...config, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
+    const logger = loggerApp({...opts, console: 'silent'}, {destinations: [...destinations, ...streams], pretty, logBaseDir, ...restExtras});
     return [logger, testStream, rawStream];
 }
 
@@ -217,6 +224,79 @@ describe('Config Parsing', function () {
         });
         expect(config.console).eq('warn')
         expect(config.file.level).eq('error')
+    });
+
+    describe('Log File Options', function() {
+
+        it(`uses CWD for base path when none is specified`, async function () {
+            const config = parseLogOptions({
+                level: 'debug'
+            });
+            expect(config.file.path).includes(process.cwd())
+        });
+
+        it(`uses user-specified base path when specified`, async function () {
+            await withLocalTmpDir(async () => {
+                const config = parseLogOptions({
+                    level: 'debug'
+                }, {logBaseDir: process.cwd()});
+                expect(config.file.path).includes(process.cwd())
+            }, {unsafeCleanup: false});
+        });
+
+        it(`uses 'logs/app.log' for default log path when none is specified`, async function () {
+            const config = parseLogOptions({
+                level: 'debug'
+            });
+            expect(config.file.path).includes('logs/app.log')
+        });
+
+        it(`uses user-specified default log path when none is specified`, async function () {
+            const config = parseLogOptions({
+                level: 'debug',
+            }, {logDefaultPath: 'logs/myApp.log'});
+            expect(config.file.path).includes('logs/myApp.log')
+        });
+
+        it(`uses config-specified absolute path`, async function () {
+            const specificPath = '/my/absolute/path/app.log';
+            const config = parseLogOptions({
+                level: 'debug',
+                file: {
+                    path:  specificPath
+                }
+            });
+            expect(config.file.path).eq(specificPath)
+        });
+
+        it(`uses config-specified relative path with base path`, async function () {
+            const relativePath = './my/relative/path/app.log';
+            const config = parseLogOptions({
+                level: 'debug',
+                file: {
+                    path:  relativePath
+                }
+            });
+            expect(config.file.path).eq(path.join(process.cwd(), relativePath));
+
+            const configWithDefault = parseLogOptions({
+                level: 'debug',
+                file: {
+                    path:  relativePath
+                }
+            }, {logDefaultPath: 'logs/myApp.log'});
+            expect(configWithDefault.file.path).eq(path.join(process.cwd(), relativePath));
+        });
+
+        it(`uses ENV-specified path`, async function () {
+            const specificPath = '/my/absolute/path/app.log';
+            process.env.LOG_PATH = specificPath;
+            const config = parseLogOptions({
+                level: 'debug',
+            });
+            delete process.env.LOG_PATH;
+            expect(config.file.path).eq(specificPath)
+        });
     });
 })
 
@@ -462,6 +542,22 @@ describe('Transports', function () {
                 const res = await race;
                 const paths = readdirSync('./config/logs');
                 expect(paths.length).eq(1);
+            }, {unsafeCleanup: true});
+        });
+
+        it('It writes to file with a different default log path', async function () {
+            await withLocalTmpDir(async () => {
+                const [logger, testStream, rawStream] = testAppLogger({file: 'debug'}, {logDefaultPath: './myApp.log'});
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                logger.debug('Test');
+                await sleep(20);
+                const res = await race;
+                const paths = readdirSync('.');
+                expect(paths.length).eq(1);
+                expect(paths[0]).includes('myApp.log');
             }, {unsafeCleanup: true});
         });
     });
