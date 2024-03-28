@@ -13,7 +13,7 @@ import {isAbsolute, resolve} from 'node:path';
 
 export const isLogOptions = (obj: object = {}): obj is LogOptions => {
     return Object.entries(obj).every(([key, val]) => {
-        if (val === undefined) {
+        if (val === undefined || !['file','console','level'].includes(key)) {
             return true;
         }
         const t = typeof val;

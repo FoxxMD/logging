@@ -180,6 +180,11 @@ describe('Config Parsing', function () {
         expect(() => parseLogOptions()).to.not.throw;
     })
 
+    it('does not throw when object contains unknown properties', function () {
+        // @ts-expect-error
+        expect(() => parseLogOptions({extraProp: 'test'})).to.not.throw;
+    })
+
     it('does not throw when a valid level is given', function () {
         for (const level of LOG_LEVEL_NAMES) {
             expect(() => parseLogOptions({level})).to.not.throw;
