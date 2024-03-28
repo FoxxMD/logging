@@ -80,38 +80,7 @@ These loggers are pre-defined for specific use cases:
 
 ## Configuring
 
-The [App Loggers](#app-loggers) take an optional config object [`LogOptions`](https://foxxmd.github.io/logging/interfaces/index.LogOptions.html):
-
-```ts
-interface LogOptions {
-  /**
-   *  Specify the minimum log level for all log outputs without their own level specified.
-   *
-   *  Defaults to env `LOG_LEVEL` or `info` if not specified.
-   *
-   *  @default 'info'
-   * */
-  level?: LogLevel
-  /**
-   * Specify the minimum log level streamed to the console (or docker container)
-   * */
-  console?: LogLevel
-  /**
-   * Specify the minimum log level to output for files or a log file options object. If `false` no log files will be created.
-   * */
-  file?: LogLevel | false | FileLogOptions
-}
-```
-Available [`LogLevel`](https://foxxmd.github.io/logging/types/index.LogLevel.html) levels, from lowest to highest:
-
-* `debug`
-* `verbose`
-* `log`
-* `info`
-* `warn`
-* `error`
-* `fatal`
-* `silent`
+The [App Loggers](#app-loggers) take an optional [`LogOptions`](https://foxxmd.github.io/logging/interfaces/index.LogOptions.html) to configure [`LogLevel`](https://foxxmd.github.io/logging/types/index.LogLevel.html) globally or individually for **Console** and **File** outputs. [`file` in `LogOptions`](https://foxxmd.github.io/logging/interfaces/index.FileLogOptions.html) may also be an object that specifies more behavior for log file output.
 
 ```ts
 const infoLogger = loggerApp({
@@ -122,48 +91,38 @@ const logger = loggerApp({
   console: 'debug', // console will log `debug` and higher
   file: 'warn' // file will log `warn` and higher
 });
+
+const fileLogger = loggerRollingApp({
+  // no level specified => console defaults to `info` level
+  file: {
+      level: 'warn', // file will log `warn` and higher
+      path: '/my/cool/path/output.log', // output to log file at this path
+      frequency: 'daily', // rotate hourly
+      size: '20MB', // rotate if file size grows larger than 20MB
+      timestamp: 'unix' // use unix epoch timestamp instead of iso8601 in rolling file
+  }
+});
 ```
 
-[`file` in `LogOptions`](https://foxxmd.github.io/logging/interfaces/index.FileLogOptions.html) may also be an object that specifies more behavior.
+An optional second parameter, [`LoggerAppExtras`](https://foxxmd.github.io/logging/interfaces/index.LoggerAppExtras.html), may be passed that allows adding additional log destinations or pino-pretty customization to the [App Loggers](#app-loggers). Some defaults and convenience variables for pino-pretty options are also available in [`@foxxmd/logging/factory`]((https://foxxmd.github.io/logging/modules/factory.html)) prefixed with `PRETTY_`.
 
-### Additional App Logger Configuration
-
-`loggerApp` and `loggerAppRolling` accept an optional second parameter, [`LoggerAppExtras`](https://foxxmd.github.io/logging/interfaces/index.LoggerAppExtras.html) that allows adding additional log destinations or pino-pretty customization:
-
-```ts
-export interface LoggerAppExtras {
-  /**
-   * Additional pino-pretty options that are applied to the built-in console/log streams (including CWD redaction)
-   * */
-  pretty?: PrettyOptionsExtra
-  /**
-   * Additional logging destinations to use alongside the built-in console/log stream. These can be any created by buildDestination* functions or other Pino Transports
-   * */
-  destinations?: LogLevelStreamEntry[]
-  /**
-   * Additional Pino Log options that are passed to `pino()` on logger creation
-   * */
-  pino?: PinoLoggerOptions
-}
-```
-
-Some defaults and convenience variables for pino-pretty options are available in `@foxxmd/logging/factory` prefixed with `PRETTY_`. See [factory variables docs](https://foxxmd.github.io/logging/modules/factory.html) for all options.
-
-An example using the extras parameter:
-
+An example using `LoggerAppExtras`:
 ```ts
 import { loggerApp } from '@foxxmd/logging';
 import {
-    PRETTY_ISO8601, // replaces standard timestamp with ISO8601 format
+    PRETTY_ISO8601,
     buildDestinationFile 
 } from "@foxxmd/logging/factory";
 
+// additional file logging but only at `warn` or higher
 const warnFileDestination = buildDestinationFile('warn', {path: './myLogs/warn.log'});
 
-const logger = loggerApp({}, {
+const logger = loggerApp({
+  level: 'debug', // console AND built-in file logging will log `debug` and higher
+  }, {
    destinations: [warnFileDestination],
    pretty: {
-     translateTime: PRETTY_ISO8601
+     translateTime: PRETTY_ISO8601 // replaces standard timestamp with ISO8601 format
    }
 });
 logger.debug('Test');
@@ -243,7 +202,7 @@ const causeErr = new ErrorWithCause('A top-level error', {cause: er});
 logger.debug(causeErr, 'Test');
 /*
 [2024-03-07 11:43:27.453 -0500] DEBUG: Test
-ErrorWithCause: A top-level error
+Error: A top-level error
     at <anonymous> (/my/dir/src/index.ts:55:18)
 caused by: Error: This is the original error
     at <anonymous> (/my/dir/src/index.ts:54:12)

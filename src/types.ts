@@ -2,6 +2,22 @@ import {DestinationStream, Logger as PinoLogger, LoggerOptions, StreamEntry, Lev
 import {PrettyOptions} from "pino-pretty";
 import {MarkRequired} from "ts-essentials";
 
+/**
+ * Names of log levels that can be invoked on the logger
+ *
+ * From lowest to highest:
+ *
+ * * `debug`
+ * * `verbose`
+ * * `log`
+ * * `info`
+ * * `warn`
+ * * `error`
+ * * `fatal`
+ * * `silent` (will never output anything)
+ *
+ * When used in `LogOptions` specifies the **minimum** level the output should log at.
+ * */
 export type LogLevel = typeof LOG_LEVEL_NAMES[number];
 
 /**
@@ -34,6 +50,29 @@ const CUSTOM_LEVEL_NAMES = Object.keys(CUSTOM_LEVELS);
 
 export const LOG_LEVEL_NAMES= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
 
+/**
+ * Configure log levels and file options for an AppLogger.
+ *
+ * ```ts
+ * const infoLogger = loggerApp({
+ *  level: 'info' // console and file will log any levels `info` and above
+ * });
+ *
+ * const logger = loggerApp({
+ *   console: 'debug', // console will log `debug` and higher
+ *   file: 'warn' // file will log `warn` and higher
+ * });
+ *
+ * const fileLogger = loggerRollingApp({
+ *   console: 'debug', // console will log `debug` and higher
+ *   file: {
+ *       level: 'warn', // file will log `warn` and higher
+ *       path: '/my/cool/path/output.log', // optionally, output to log file at this path
+ *       frequency: 'hourly', // optionally, rotate hourly
+ *   }
+ * });
+ * ```
+ * */
 export interface LogOptions {
     /**
      *  Specify the minimum log level for all log outputs without their own level specified.
@@ -125,6 +164,21 @@ export interface RollOptions {
     timestamp?: 'unix' | 'iso' | 'auto'
 }
 
+/**
+ * Specify and override default log file options
+ *
+ * ```ts
+ * const fileLogger = loggerRollingApp({
+ *   file: {
+ *       level: 'warn', // file will log `warn` and higher
+ *       path: '/my/cool/path/output.log', // output to log file at this path
+ *       frequency: 'daily', // rotate hourly
+ *       size: '20MB', // rotate if file size grows larger than 20MB
+ *       timestamp: 'unix' // use unix epoch timestamp instead of iso8601 in rolling file
+ *   }
+ * });
+ * ```
+ * */
 export interface FileOptions extends PinoRollOptions, RollOptions {
     /**
      * The path and filename to use for log files.
@@ -168,6 +222,9 @@ export type JsonPrettyDestination =  StreamDestination & {
 
 export type LogOptionsParsed = Omit<Required<LogOptions>, 'file'> & { file: FileLogOptionsParsed }
 
+/**
+ * Additional settings and Pino Transports to apply to the returned Logger.
+ * */
 export interface LoggerAppExtras {
     /**
      * Additional pino-pretty options that are applied to the built-in console/log streams
