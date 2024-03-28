@@ -10,7 +10,7 @@
     "prepare": "tshy",
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
     "example": "tsx example/kitchenSink.ts",
-    "screenshot": "freeze --execute \"node_modules/.bin/tsx example/kitchenSink.ts\" -c full -o \"assets/example.png\""
+    "screenshot": "freeze --execute \"node_modules/.bin/tsx example/kitchenSink.ts\" -c full -o \"assets/example.svg\""
   },
   "runkitExampleFilename": "example/runkit.js",
   "keywords": [

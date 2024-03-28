@@ -23,7 +23,7 @@ Features:
 * [Build-Your-Own Logger](#building-a-logger)
   * Don't want to use any of the pre-built transports? Leverage the convenience of @foxxmd/logging wrappers and default settings but build your logger from scratch
 
-<img src="/assets/example.png" alt="example log output">
+<img src="/assets/example.svg" alt="example log output">
 
 **Documentation best viewed on [https://foxxmd.github.io/logging](https://foxxmd.github.io/logging)**
 
