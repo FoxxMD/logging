@@ -6,6 +6,7 @@
   "description": "A typed, opinionated, batteries-included, Pino-based logging solution for backend TS/JS projects",
   "scripts": {
     "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --plugin typedoc-plugin-inline-sources --media ./assets",
+    "typedoc:watch": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --plugin typedoc-plugin-inline-sources --media ./assets --watch",
     "build": "tsc",
     "prepare": "tshy",
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",

@@ -1,3 +1,20 @@
+const replacements = [
+    {
+        pattern: "\/assets\/",
+        replace: "media://"
+    }
+];
+const baseUrl = process.env.BASE_TD_URL;
+if(baseUrl !== undefined && baseUrl.trim() !== '') {
+    const cleaned = baseUrl.replace(/^["']/, '').replace(/["']$/, '');
+    replacements.push(
+        {
+            pattern: "https:\/\/foxxmd.github.io\/logging",
+            replace: cleaned
+        }
+    );
+}
+
 /** @type { import('typedoc').TypeDocOptionMap & import('typedoc-plugin-replace-text').Config } */
 module.exports ={
     name: "@foxxmd/logging Docs",
@@ -16,11 +33,6 @@ module.exports ={
     },
     replaceText: {
         inIncludedFiles: true,
-        replacements: [
-            {
-                pattern: "\/assets\/",
-                replace: "media://"
-            }
-        ]
+        replacements
     }
 }
