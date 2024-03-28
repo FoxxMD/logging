@@ -333,3 +333,199 @@ import {parseLogOptions, LogOptions} from '@foxxmd/logging';
 
 const parsedOptions: LogOptions = parseLogOptions(myConfig);
 ```
+
+# Examples
+
+Various use-cases for `@foxxmd/logging` and how to configure a logger for them.
+
+Remember, `loggerApp` and `loggerAppRolling` **accept the same arguments.** The examples below use `loggerApp` but `loggerAppRolling` can be used as a drop-in replacement in order to use a rolling log file.
+
+#### Log to Console and File
+
+```ts
+import {loggerApp, loggerAppRolling} from '@foxxmd/logging';
+
+// static log file at ./logs/app.log
+const staticLogger = loggerApp();
+
+// rolling log file at ./logs/app.1.log
+const rollingLogger = loggerAppRolling();
+```
+
+#### Log At Specific Level Or Higher for Console and File
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+// INFO is the default level
+// when 'console' is not specified it logs to 'info' or higher
+// when 'file' is not specified it logs to 'info' or higher
+const infoLogger = loggerApp();
+
+// logs to console and log at 'debug' level and higher
+const debugLogger = loggerApp({level: 'debug'});
+```
+
+#### Log At `debug` for Console and `warn` for File
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+const logger = loggerApp({
+  console: 'debug',
+  file: 'warn'
+});
+```
+
+#### Do not log to File
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+// also logs to console at 'info' level
+const logger = loggerApp({
+  file: false
+});
+```
+
+#### Log to Specific File
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+// also logs to console at 'info' level
+const logger = loggerApp({
+  file: {
+      path: './path/to/file.log'
+  }
+});
+```
+
+#### Log to Rolling File with Unix Timestamp
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+// also logs to console at 'info' level
+const logger = loggerApp({
+  file: {
+      timestamp: 'unix'
+  }
+});
+```
+
+#### Log to Rolling File with no timestamp
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+
+// also logs to console at 'info' level
+const logger = loggerApp({
+  file: {
+      // specify size but NOT 'frequency' to disable timestamps in filename
+      size: '10M'
+  }
+});
+```
+
+#### Log to additional File for 'error' only
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+import { buildDestinationFile } from "@foxxmd/logging/factory";
+
+const errorFileDestination = buildDestinationFile('error', {path: './myLogs/warn.log'});
+
+// also logs to console and file at 'info' level
+const logger = loggerApp({}, {
+    destinations: [errorFileDestination]
+});
+```
+
+#### Log raw, newline-delimited json logs to additional File
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+import { buildDestinationFile } from "@foxxmd/logging/factory";
+import fs from 'node:fs';
+
+const rawFile = fs.createWriteStream('myRawFile.log');
+
+// also logs to console and file at 'info' level
+const logger = loggerApp({}, {
+    destinations: [
+      {
+          level: 'debug',
+          stream: rawFile // logs are NOT prettified, only raw data from pino
+      }
+    ]
+});
+```
+
+#### Log prettified data to additional stream
+
+This could be used to trigger something when a log object with a specific property is found. Or to stream prettified log json to a client over websockets.
+
+To emit data as an object ([`LogDataPretty`](https://foxxmd.github.io/logging/types/index.LogDataPretty.html)) set `objectMode` and `object` to true.
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+import { buildDestinationJsonPrettyStream } from "@foxxmd/logging/factory";
+import { PassThrough } from "node:stream";
+
+const prettyObjectStream = new Passthrough({objectMode: true}); // objectMode MUST be true to get objects from the stream
+const prettyObjectDestination = buildDestinationJsonPrettyStream('debug', {
+  destination: prettyObjectStream,
+  object: true, // must be set to true to use with objectMode stream
+  colorize: true
+});
+
+const prettyStringStream = new Passthrough(); // will emit data as a json string
+const prettyStringDestination = buildDestinationJsonPrettyStream('debug', {
+  destination: prettyStringStream,
+  object: false,
+  colorize: true
+});
+
+// also logs to console and file at 'info' level
+const logger = loggerApp({}, {
+    destinations: [
+      prettyObjectDestination,
+      prettyStringDestination
+    ]
+});
+
+prettyObjectStream.on('data', (log) => {
+  // do something with log object (LogDataPretty) 
+});
+
+prettyStringStream.on('data', (log) => {
+  // do something with log string
+});
+```
+
+#### Log to additional Pino Transports
+
+Log to a [Pino Transport](https://getpino.io/#/docs/transports) like [pino-elasticsearch](https://getpino.io/#/docs/transports?id=pino-elasticsearch):
+
+```ts
+import {loggerApp} from '@foxxmd/logging';
+import pinoElastic from 'pino-elasticsearch'
+
+const streamToElastic = pinoElastic({
+  index: 'an-index',
+  node: 'http://localhost:9200',
+  esVersion: 7,
+  flushBytes: 1000
+});
+
+// also logs to console and file at 'info' level
+const logger = loggerApp({}, {
+    destinations: [
+      {
+          level: 'debug',
+          stream: streamToElastic
+      }
+    ]
+});
+```
