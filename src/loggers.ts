@@ -24,7 +24,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
 
     const plogger = pino<"verbose" | "log">({
         // @ts-ignore
-        mixin: (obj, num, loggerThis) => {
+        mixin: (obj, num, loggerThis: Logger) => {
             return {
                 labels: loggerThis.labels ?? []
             }

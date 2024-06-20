@@ -70,10 +70,10 @@
     "with-local-tmp-dir": "^5.1.1"
   },
   "dependencies": {
-    "pino": "^8.19.0",
-    "pino-abstract-transport": "^1.1.0",
-    "pino-pretty": "^11.0.0",
-    "pino-roll": "^1.0.1",
+    "pino": "^9.2.0",
+    "pino-abstract-transport": "^1.2.0",
+    "pino-pretty": "^11.2.1",
+    "pino-roll": "^1.1.0",
     "pump": "^3.0.0"
   },
   "overrides": {
@@ -87,20 +87,24 @@
     "./package.json": "./package.json",
     ".": {
       "import": {
+        "source": "./src/index.js",
         "types": "./dist/esm/index.d.ts",
         "default": "./dist/esm/index.js"
       },
       "require": {
+        "source": "./src/index.js",
         "types": "./dist/commonjs/index.d.ts",
         "default": "./dist/commonjs/index.js"
       }
     },
     "./factory": {
       "import": {
+        "source": "./src/factory.js",
         "types": "./dist/esm/factory.d.ts",
         "default": "./dist/esm/factory.js"
       },
       "require": {
+        "source": "./src/factory.js",
         "types": "./dist/commonjs/factory.d.ts",
         "default": "./dist/commonjs/factory.js"
       }

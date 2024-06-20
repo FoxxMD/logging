@@ -176,8 +176,7 @@ export const buildDestinationJsonPrettyStream = (level: LogLevel, options: JsonP
 
         // @ts-ignore
         pump(source, stream, destinationStream);
-        return stream;
-    }, { parse: 'lines' });
+    }, { parse: 'lines'});
 
     return {
         level: level,
