@@ -5,7 +5,7 @@
   "repository": "https://github.com/foxxmd/logging",
   "description": "A typed, opinionated, batteries-included, Pino-based logging solution for backend TS/JS projects",
   "scripts": {
-    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --plugin typedoc-plugin-inline-sources --media ./assets",
+    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --plugin typedoc-plugin-inline-sources --plugin @8hobbies/typedoc-plugin-plausible",
     "typedoc:watch": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-replace-text --plugin typedoc-plugin-inline-sources --media ./assets --watch",
     "build": "tsc",
     "prepare": "tshy",
@@ -46,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "@8hobbies/typedoc-plugin-plausible": "^2.0.0",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
     "@types/dateformat": "^5.0.2",
@@ -62,9 +63,9 @@
     "ts-essentials": "^9.4.1",
     "tshy": "^1.7.0",
     "tsx": "^4.7.1",
-    "typedoc": "^0.25.11",
+    "typedoc": "^0.26.2",
     "typedoc-plugin-inline-sources": "^1.0.2",
-    "typedoc-plugin-missing-exports": "^2.2.0",
+    "typedoc-plugin-missing-exports": "^3.0.0",
     "typedoc-plugin-replace-text": "^3.3.0",
     "typescript": "^5.3.3",
     "with-local-tmp-dir": "^5.1.1"
