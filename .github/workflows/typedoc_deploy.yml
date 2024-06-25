@@ -21,6 +21,9 @@ jobs:
       - run: npm run build
 
       - name: Create the docs directory locally in CI
+        env:
+          ANALYTICS: ${{ vars.ANALYTICS }}
+          ANALYTICS_DOMAIN: ${{ vars.ANALYTICS_DOMAIN }}
         run: npm run typedoc
 
       - name: Deploy 🚀
