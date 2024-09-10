@@ -15,7 +15,7 @@ export const fileOrDirectoryIsWriteable = (location: string) => {
             let currPath = pathInfo;
             let parentOK = false;
             let accessError = null;
-            while(currPath.dir !== '') {
+            while(currPath.dir !== '' && currPath.dir !== '/') {
                 try {
                     accessSync(currPath.dir, constants.R_OK | constants.W_OK);
                     parentOK = true;
@@ -31,7 +31,7 @@ export const fileOrDirectoryIsWriteable = (location: string) => {
             if(parentOK) {
                 return true;
             }
-            if (accessError.code === 'EACCES') {
+            if (!accessError || accessError.code === 'EACCES') {
                 // also can't access directory :(
                 throw new Error(`No ${isDir ? 'directory' : 'file'} exists at ${location} and application does not have permission to write to the parent directory`);
             } else {
