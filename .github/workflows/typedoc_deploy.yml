@@ -16,8 +16,7 @@ jobs:
           node-version: 18.x
           cache: 'npm'
 
-        # until typedoc-inline-sources is updated we need to force install
-      - run: npm ci --force
+      - run: npm ci
       - run: npm run build
 
       - name: Create the docs directory locally in CI
