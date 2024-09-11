@@ -8,7 +8,7 @@ import {
 import {destination, DestinationStream} from "pino";
 import {build, prettyFactory} from "pino-pretty"
 import {PRETTY_OPTS_FILE, prettyOptsConsoleFactory, prettyOptsFileFactory} from "./pretty.js";
-import {fileOrDirectoryIsWriteable, parseBool} from "./util.js";
+import {pathIsWriteable, parseBool} from "./util.js";
 import path from "path";
 import {Transform, TransformCallback} from "node:stream";
 import pump from 'pump';
@@ -39,7 +39,7 @@ export const buildDestinationRollingFile = async (level: LogLevel | false, optio
     const testPath = typeof logPath === 'function' ? logPath() : logPath;
 
     try {
-        fileOrDirectoryIsWriteable(testPath);
+        pathIsWriteable(testPath);
     }  catch (e: any) {
         throw new Error('Cannot write logs to rotating file due to an error while trying to access the specified logging directory', {cause: e});
     }
@@ -92,7 +92,7 @@ export const buildDestinationFile = (level: LogLevel | false, options: FileDesti
 
     try {
         const filePath = typeof logPathVal === 'function' ? logPathVal() : logPathVal;
-        fileOrDirectoryIsWriteable(filePath);
+        pathIsWriteable(filePath);
         const dest = destination({dest: filePath, mkdir: true, sync: false})
 
         return {
