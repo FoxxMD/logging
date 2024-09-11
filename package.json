@@ -1,7 +1,7 @@
 {
   "name": "@foxxmd/logging",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1-rc1",
   "repository": "https://github.com/foxxmd/logging",
   "description": "A typed, opinionated, batteries-included, Pino-based logging solution for backend TS/JS projects",
   "scripts": {
@@ -66,7 +66,7 @@
     "typedoc": "^0.26.2",
     "typedoc-plugin-inline-sources": "^1.0.2",
     "typedoc-plugin-missing-exports": "^3.0.0",
-    "typedoc-plugin-replace-text": "^3.3.0",
+    "typedoc-plugin-replace-text": "^4.0.0",
     "typescript": "^5.3.3",
     "with-local-tmp-dir": "^5.1.1"
   },
