@@ -34,5 +34,7 @@ module.exports ={
     replaceText: {
         inIncludedFiles: true,
         replacements
-    }
+    },
+    plausibleSiteDomain: process.env.ANALYTICS ?? '',
+    plausibleSiteOrigin: process.env.ANALYTICS_DOMAIN ?? '',
 }
