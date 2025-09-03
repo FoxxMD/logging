@@ -9,7 +9,7 @@ import {
     LogOptions
 } from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
-import {pino} from "pino";
+import {pino, levels} from "pino";
 
 /**
  * Builds a Logger object for use in your application
@@ -42,7 +42,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
         customLevels: CUSTOM_LEVELS,
         useOnlyCustomLevels: false,
         ...extras
-    }, pino.multistream(streams)) as Logger;
+    }, pino.multistream(streams, {levels: {...levels.values, ...CUSTOM_LEVELS}})) as Logger;
     plogger.labels = [];
 
     plogger.addLabel = function (value) {
