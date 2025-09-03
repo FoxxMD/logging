@@ -55,7 +55,7 @@ export const parseLogOptions = (config: LogOptions = {}, options?: FileLogPathOp
     const {
         level = configLevel || defaultLevel,
         file = configLevel || defaultLevel,
-        console = configLevel || 'debug',
+        console = configLevel || envLevel || 'debug',
     } = config;
 
     let fileObj: FileLogOptionsParsed;
