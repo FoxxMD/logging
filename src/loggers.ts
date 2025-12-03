@@ -9,7 +9,7 @@ import {
     LogOptions
 } from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
-import {pino, levels} from "pino";
+import {pino, levels, stdSerializers} from "pino";
 
 /**
  * Builds a Logger object for use in your application
@@ -41,6 +41,23 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
         level: defaultLevel,
         customLevels: CUSTOM_LEVELS,
         useOnlyCustomLevels: false,
+        serializers: {
+            err: stdSerializers.err,
+            labels: (labels: any[]) => {
+                // allow dynamic labels
+                return labels.map(x => {
+                    if(typeof x === 'function') {
+                        try {
+                            return x()
+                        } catch (e) {
+                            return e.message;
+                        }
+                    }
+                    return x;
+
+                }).filter(x => x !== null && x !== undefined);
+            },
+        },
         ...extras
     }, pino.multistream(streams, {levels: {...levels.values, ...CUSTOM_LEVELS}})) as Logger;
     plogger.labels = [];

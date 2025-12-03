@@ -147,7 +147,7 @@ Thus you could set `COLORED_STD=true` in your Dockerfile to coerce colored outpu
 
 **Labels** are inserted between the log level and message contents of a log. The child logger inherits **all** labels from **all** its parent loggers.
 
-`childLogger` accepts a single string label or an array of string labels.
+`childLogger` accepts a single string/function label or an array of string/function labels.
 
 ```ts
 import {loggerApp, childLogger} from '@foxxmd/logging';
@@ -160,7 +160,7 @@ const nestedChild1 = childLogger(logger, 'First');
 nestedChild1.debug('I am nested one level');
 // [2024-03-07 11:27:41.945 -0500] DEBUG: [First] I am nested one level
 
-const nestedChild2 = childLogger(nestedChild1, ['Second', 'Third']);
+const nestedChild2 = childLogger(nestedChild1, ['Second', () => 'Third']);
 nestedChild2.warn('I am nested two levels but with more labels');
 // [2024-03-07 11:27:41.945 -0500] WARN: [First] [Second] [Third] I am nested two levels but with more labels
 
@@ -174,6 +174,8 @@ Labels can also be added at "runtime" by passing an object with `labels` prop to
 ```ts
 logger.debug({labels: ['MyLabel']}, 'My log message');
 ```
+
+**NOTE:** If a label *function* throws an error then the label will be the error's message. Make sure your labels don't throw!
 
 ### Serializing Objects and Errors
 

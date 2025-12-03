@@ -622,12 +622,28 @@ describe('Child Logger', function() {
             expect(raw.labels[1]).eq('Test2');
         });
 
+        it('outputs labels from functions', async function () {
+            const [logger, testStream, rawStream] = testConsoleLogger();
+            const formattedBuff = pEvent(testStream, 'data');
+            const rawBuff = pEvent(rawStream, 'data');
+            const child = childLogger(logger, ['Test1', () => 'Dynamic']);
+            child.debug('log something');
+            await sleep(10);
+            const formatted = (await formattedBuff).toString();
+            const raw = JSON.parse((await rawBuff).toString()) as LogData;
+            expect(formatted).includes(' [Test1] [Dynamic] ');
+            expect(raw.labels).is.not.undefined;
+            expect(raw.labels.length).eq(2);
+            expect(raw.labels[0]).eq('Test1');
+            expect(raw.labels[1]).eq('Dynamic');
+        });
+
         it('merges labels from nested children', async function () {
             const [logger, testStream, rawStream] = testConsoleLogger();
             const formattedBuff = pEvent(testStream, 'data');
             const rawBuff = pEvent(rawStream, 'data');
             const child = childLogger(logger, ['Test1', 'Test2']);
-            const child2 = childLogger(child, ['Test3', 'Test4']);
+            const child2 = childLogger(child, ['Test3', () => 'Test4']);
             const child3 = childLogger(child2, ['Test5']);
             child3.debug('log something');
             await sleep(10);
@@ -649,7 +665,7 @@ describe('Child Logger', function() {
             const rawBuff = pEvent(rawStream, 'data');
 
             logger.addLabel('Parent');
-            const child = childLogger(logger, ['Test1']);
+            const child = childLogger(logger, [() => 'Test1']);
             child.debug({labels: ['Runtime']},'log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();
@@ -679,11 +695,12 @@ describe('Child Logger', function() {
             const rawBuff = pEvent(rawStream, 'data');
 
             logger.addLabel('Parent');
-            logger.debug({labels: ['Runtime']},'log something');
+            logger.debug({labels: ['Runtime', () => 'Runtime2']},'log something');
             await sleep(10);
             const formatted = (await formattedBuff).toString();
             expect(formatted).includes(' [Parent] ');
             expect(formatted).includes(' [Runtime] ');
+             expect(formatted).includes(' [Runtime2] ');
         });
     });
 });
