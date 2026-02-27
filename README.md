@@ -178,6 +178,43 @@ logger.debug({labels: ['MyLabel']}, 'My log message');
 
 **NOTE:** If a label *function* throws an error then the label will be the error's message. Make sure your labels don't throw!
 
+#### Filtering By Label
+
+Logs can be filtered by labels similar to how [debug-js](https://github.com/debug-js/debug) works.
+
+By default *no* filtering is done. Your child loggers follow the Pino Child Logger behavior of inherting parent log level.
+
+Using either `LOG_FILTER_ENABLE` or `LOG_FILTER_DISABLE` you can enable or disable a child logger and it's children.
+
+```ts
+
+/*
+ * process.env.LOG_FILTER_ENABLE = 'Third:Fourth,Second:*:Foo,Bar'
+ */
+
+import {loggerApp, childLogger} from '@foxxmd/logging';
+
+logger = loggerApp();
+logger.debug('Test');
+// [2024-03-07 11:27:41.944 -0500] DEBUG: Test
+
+const nestedChild1 = childLogger(logger, 'First');
+nestedChild1.debug('I am nested one level');
+// [2024-03-07 11:27:41.945 -0500] DEBUG: [First] I am nested one level
+
+const nestedChild2 = childLogger(nestedChild1, ['Second', 'Third'], { level: 'silent' });
+nestedChild2.info('I do not log because of set level and not enabled by filter');
+
+const nestedChild3 = childLogger(nestedChild2, ['Fourth']);
+nestedChild3.info('I do log because of filter Third:Fourth');
+
+const nestedChild4 = childLogger(nestedChild3, ['Foo']);
+nestedChild4.info('I do log because of filter Second:*:Foo');
+
+const nestedChild5 = childLogger(nestedChild4, ['Bar']);
+nestedChild5.info('I do log because of filter Bar');
+```
+
 ### Serializing Objects and Errors
 
 Passing an object or array as the first argument to the logger will cause the object to be JSONified and pretty printed below the log message

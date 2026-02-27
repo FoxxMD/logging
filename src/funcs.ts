@@ -1,8 +1,10 @@
 import process from "process";
 import {
+    ChildLabel,
     FileLogOptions,
     FileLogOptionsParsed,
     FileLogPathOptions,
+    FilterLabelsFunc,
     LOG_LEVEL_NAMES,
     LogLevel,
     LogOptions,
@@ -111,3 +113,54 @@ export const getLogPath = (path?: string, options: FileLogPathOptions = {}) => {
 
     return resolve(baseDir, pathVal);
 }
+
+export const labelsStrBuilder = (labels: ChildLabel[]) => {
+    return labels.map(x => typeof x === 'function' ? 'dynamicfunc' : x.toLocaleLowerCase().trim()).reverse().join(':');
+}
+export const labelFilterToRegex = (filter: string) => {
+    const reverseCleaned = filter.split(':').map(x => x.trim().toLocaleLowerCase().replace('*','.+')).reverse().join(':');
+    return new RegExp(`^${reverseCleaned}`);
+}
+
+export const labelFiltersFromStr = (str?: string): RegExp[] | undefined => {
+    if(str === undefined || str.trim() === '') {
+        return undefined;
+    }
+    return str.split(',').map(x => labelFilterToRegex(x.trim()));
+}
+
+export const labelFiltersFromEnvSingleton = (envName: string): FilterLabelsFunc => {
+    let envFilterRes: false | RegExp[];
+    return (labels: ChildLabel[]) => {
+        if(envFilterRes === undefined) {
+            envFilterRes = labelFiltersFromStr(process.env[envName]);
+            if(envFilterRes === undefined) {
+                envFilterRes = false;
+            }
+        }
+        if(envFilterRes === false) {
+            return false;
+        }
+
+        const labelStr = labelsStrBuilder(labels);
+        return envFilterRes.some(x => x.test(labelStr));
+    }
+}
+
+
+export const labelsEnableFromEnvSingleton = labelFiltersFromEnvSingleton('LOG_FILTER_ENABLE');
+export const labelsDisableFromEnvSingleton = labelFiltersFromEnvSingleton('LOG_FILTER_DISABLE');
+
+export const labelsFilterFromEnv = (envName: string): FilterLabelsFunc => {
+    return (labels: ChildLabel[]) => {
+        const envFilterRes = labelFiltersFromStr(process.env[envName]);
+        if(envFilterRes === undefined) {
+            return false;
+        }
+        const labelStr = labelsStrBuilder(labels);
+        return envFilterRes.some(x => x.test(labelStr));
+    }
+}
+
+export const labelsEnableFromEnv = labelsFilterFromEnv('LOG_FILTER_ENABLE');
+export const labelsDisableFromEnv = labelsFilterFromEnv('LOG_FILTER_DISABLE');

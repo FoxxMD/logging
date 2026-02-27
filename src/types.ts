@@ -51,6 +51,18 @@ const CUSTOM_LEVEL_NAMES = Object.keys(CUSTOM_LEVELS);
 
 export const LOG_LEVEL_NAMES= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug', 'trace'] as const;
 
+export type ChildLabel = (string | CallableFunction);
+
+export type FilterLabelsFunc = (labels: ChildLabel[]) => boolean;
+
+export interface ChildLoggerOptions {
+    labelEnable?: (labels: ChildLabel[]) => boolean,
+    labelEnableLevel?: LogLevel,
+    labelDisable?: (labels: ChildLabel[]) => boolean,
+    labelDisableLevel?: LogLevel
+    [key: string]: any
+}
+
 /**
  * Configure log levels and file options for an AppLogger.
  *

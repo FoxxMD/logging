@@ -24,6 +24,7 @@ import {buildLogger} from "../src/loggers.js";
 import {readFileSync} from "fs";
 import path from "path";
 import dateFormatDef from "dateformat";
+import { labelsDisableFromEnv, labelsEnableFromEnv, labelFilterToRegex, labelsStrBuilder } from "../src/funcs.js";
 
 const dateFormat = dateFormatDef as unknown as typeof dateFormatDef.default;
 
@@ -32,7 +33,7 @@ const testConsoleLogger = (config?: object, colorize = false): [Logger, Transfor
     const opts = parseLogOptions(config, {logBaseDir: process.cwd()});
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const logger = buildLogger('trace', [
+    const logger = buildLogger('debug', [
         buildDestinationStream(
             opts.console,
             {
@@ -702,6 +703,90 @@ describe('Child Logger', function() {
             expect(formatted).includes(' [Runtime] ');
              expect(formatted).includes(' [Runtime2] ');
         });
+
+        describe('Filtering', function () {
+
+            before(function () {
+                delete process.env.LOG_FILTER_ENABLE;
+                delete process.env.LOG_FILTER_DISABLE;
+            });
+
+            it('Does not output if silent', async function () {
+                const [logger, testStream, rawStream] = testConsoleLogger();
+                const child = childLogger(logger, 'Test', {}, {level: 'silent'});
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                child.debug('Test');
+                const res = await race;
+                expect(res).to.be.undefined;
+            });
+
+            it('Does not output if parent is silent', async function () {
+                const [logger, testStream, rawStream] = testConsoleLogger();
+                const child = childLogger(logger, 'Test', {}, {level: 'silent'});
+                const child2 = childLogger(child, 'Test1', {});
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                child2.debug('Test');
+                const res = await race;
+                expect(res).to.be.undefined;
+            });
+
+            it('Does output if enabled by env filter', async function () {
+                process.env.LOG_FILTER_ENABLE = 'Test:*';
+
+                const [logger, testStream, rawStream] = testConsoleLogger();
+                const child = childLogger(logger, ['Test','Bar'], {}, {
+                    level: 'silent',
+                    labelEnable: labelsEnableFromEnv
+                });
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                child.debug('Test');
+                const res = await race;
+                expect(res).to.not.be.undefined;
+            });
+
+            it('Does output if enabled by env filter and parent was silent', async function () {
+                process.env.LOG_FILTER_ENABLE = 'Bar';
+
+                const [logger, testStream, rawStream] = testConsoleLogger();
+                const parent = childLogger(logger, ['Foo'], {}, {level: 'silent'})
+                const child = childLogger(parent, ['Test','Bar'], {}, {
+                    labelEnable: labelsEnableFromEnv,
+                    labelEnableLevel: 'debug'
+                });
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                child.debug('Test');
+                const res = await race;
+                expect(res).to.not.be.undefined;
+            });
+
+            it('Does not output if disabled by env filter', async function () {
+                process.env.LOG_FILTER_ENABLE = 'Bar:Foo';
+
+                const [logger, testStream, rawStream] = testConsoleLogger();
+                const child = childLogger(logger, ['Test','Bar','Foo'], {}, {
+                    labelDisable: labelsDisableFromEnv
+                });
+                const race = Promise.race([
+                    pEvent(testStream, 'data'),
+                    sleep(10)
+                ]) as Promise<Buffer>;
+                child.debug('Test');
+                const res = await race;
+                expect(res).to.not.be.undefined;
+            });
+        });
     });
 });
 
@@ -780,4 +865,137 @@ describe('Pretty Options', function() {
         const formatted = (await formattedBuff).toString();
         expect(formatted).includes(dt);
     });
+});
+
+describe('Label Filtering', function() {
+
+    describe('Filter Building and Parsing Funcs', function() {
+
+        it('takes a user filter, cleans it, and reverses it', function() {
+
+            const userFilter = 'My Foo: My Bar';
+
+            const expected = new RegExp(/^my bar:my foo/);
+
+            const parsed = labelFilterToRegex(userFilter);
+            expect(parsed.toString()).eq(expected.toString());
+        });
+
+        it('takes a user filter with wildcard and converts to .+', function() {
+
+            const userFilter = 'My Foo:*:My Bar';
+
+            const expected = new RegExp(/^my bar:.+:my foo/);
+
+            const parsed = labelFilterToRegex(userFilter);
+            expect(parsed.toString()).eq(expected.toString());
+        });
+
+        it('takes labels and converts to string for filter', function() {
+
+            const labels = ['My Foo','My Bar', 'My GAZ'];
+
+            const expected = 'my gaz:my bar:my foo';
+
+            const parsed = labelsStrBuilder(labels);
+            expect(parsed).eq(expected);
+        });
+
+    });
+
+    describe('Filter regex testing', function() {
+
+        it('Passes when single label matches single filter', function() {
+
+            const labels = ['My Label'];
+            const filter = 'My Label';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.true;
+
+        });
+
+        it('Passes based on last user filter matching right-most labels', function() {
+
+            const labels = ['My Label', 'My Second'];
+            const filter = 'My Second';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.true;
+
+        });
+
+        it('Does not pass if last user filter does not match right-most label', function() {
+
+            const labels = ['My Label', 'My Second'];
+            const filter = 'My Label';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.false;
+
+        });
+
+        it('Passes when explicit, multiple user filters match right-most labels', function() {
+
+            const labels = ['Foo','My Label', 'My Second'];
+            const filter = 'My Label:My Second';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.true;
+
+        });
+
+        it('Passes when wildcard satisfies interim labels', function() {
+
+            const labels = ['Foo','My Label','Other','My Second'];
+            const filter = 'Foo:*:My Second';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.true;
+
+        });
+
+        it('Does not pass if wildcard satisfies interim labels but not all explicit right-most labels', function() {
+
+            const labels = ['Foo','My Label','Other','My Second'];
+            const filter = 'Foo:*:My Second:Final';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.false;
+
+        });
+
+        it('Passes if wildcard is for all subsequent labels', function() {
+
+            const labels = ['Foo','My Label','Other','My Second'];
+            const filter = 'Foo:My Label:*';
+
+
+            const reg = labelFilterToRegex(filter);
+            const labelStr = labelsStrBuilder(labels);
+
+            expect(reg.test(labelStr)).is.true;
+
+        });
+
+    });
+
 });

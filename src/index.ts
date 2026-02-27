@@ -8,12 +8,21 @@ import {
     LogLevel,
     LOG_LEVEL_NAMES,
     LoggerAppExtras,
-    PrettyOptionsExtra
+    PrettyOptionsExtra,
+    ChildLoggerOptions
 } from './types.js'
 
 import {
     isLogOptions,
     parseLogOptions,
+    labelsStrBuilder,
+    labelFiltersFromStr,
+    labelFiltersFromEnvSingleton,
+    labelsEnableFromEnvSingleton,
+    labelsDisableFromEnvSingleton,
+    labelsFilterFromEnv,
+    labelsEnableFromEnv,
+    labelsDisableFromEnv
 } from './funcs.js'
 
 import {childLogger, loggerApp, loggerDebug, loggerTest, loggerTrace, loggerAppRolling} from './loggers.js';
@@ -27,7 +36,8 @@ export type {
     LogDataPretty,
     LogLevel,
     LoggerAppExtras,
-    PrettyOptionsExtra
+    PrettyOptionsExtra,
+    ChildLoggerOptions
 }
 
 export {
@@ -39,5 +49,13 @@ export {
     LOG_LEVEL_NAMES,
     childLogger,
     parseLogOptions,
-    isLogOptions
+    isLogOptions,
+    labelsStrBuilder,
+    labelFiltersFromStr,
+    labelFiltersFromEnvSingleton,
+    labelsEnableFromEnvSingleton,
+    labelsDisableFromEnvSingleton,
+    labelsFilterFromEnv,
+    labelsEnableFromEnv,
+    labelsDisableFromEnv
 }

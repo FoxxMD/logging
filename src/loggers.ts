@@ -1,4 +1,4 @@
-import {parseLogOptions} from "./funcs.js";
+import {labelsDisableFromEnv, labelsDisableFromEnvSingleton, labelsEnableFromEnv, labelsEnableFromEnvSingleton, parseLogOptions} from "./funcs.js";
 import {
     PinoLoggerOptions,
     CUSTOM_LEVELS,
@@ -6,7 +6,8 @@ import {
     LoggerAppExtras,
     LogLevel,
     LogLevelStreamEntry,
-    LogOptions
+    LogOptions,
+    ChildLoggerOptions
 } from "./types.js";
 import {buildDestinationFile, buildDestinationRollingFile, buildDestinationStdout} from "./destinations.js";
 import {pino, levels, stdSerializers} from "pino";
@@ -45,7 +46,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
         },
         mixinMergeStrategy(mergeObject: Record<any, any>, mixinObject: Record<any, any>) {
             if(mergeObject.labels === undefined || mixinObject.labels === undefined || mixinObject.labels.length === 0) {
-                return Object.assign(mergeObject, mixinObject)
+                return Object.assign(mergeObject, mixinObject);
             }
             const runtimeLabels = Array.isArray(mergeObject.labels) ? mergeObject.labels : [mergeObject.labels];
             const finalObj = Object.assign(mergeObject, mixinObject);
@@ -91,10 +92,18 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
  * @param parent Logger Parent logger to inherit from
  * @param labelsVal (any | any[]) Labels to always apply to logs from this logger
  * @param context object Additional properties to always apply to logs from this logger
- * @param options object
+ * @param options ChildLoggerOptions
  * */
-export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context: object = {}, options = {}): Logger => {
-    const newChild = parent.child(context, options) as Logger;
+export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context: object = {}, options: ChildLoggerOptions = {}): Logger => {
+    const {
+        labelEnable = labelsEnableFromEnvSingleton,
+        labelEnableLevel = parent.level,
+        labelDisable = labelsDisableFromEnvSingleton,
+        labelDisableLevel = 'silent',
+        ...rest
+    } = options;
+
+    const newChild = parent.child(context, rest) as Logger;
     const labels = Array.isArray(labelsVal) ? labelsVal : [labelsVal];
     newChild.labels = [...[...(parent.labels ?? [])], ...labels];
     newChild.addLabel = function (value) {
@@ -102,6 +111,12 @@ export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context
             this.labels = [];
         }
         this.labels.push(value);
+    }
+
+    if(newChild.level !== labelEnableLevel && labelEnable !== undefined && labelEnable(newChild.labels)) {
+         newChild.level = labelEnableLevel;
+    } else if (newChild.level !== labelDisableLevel && labelDisable !== undefined && labelDisable(newChild.labels)) {
+        newChild.level = labelDisableLevel;
     }
     return newChild
 }
