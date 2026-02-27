@@ -20,7 +20,21 @@ import {pino, levels, stdSerializers} from "pino";
  * */
 export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry[], extras: PinoLoggerOptions = {}): Logger => {
     // TODO maybe implement custom levels
-    //const { levels = {} } = extras;
+    //const { levels: extraLevels = {} } = extras;
+    /*
+        pino levels are found at pino/lib/constants.js
+        trace: 10,
+        debug: 20,
+        info: 30,
+        warn: 40,
+        error: 50,
+        fatal: 60
+
+        MS custom levels
+        verbose: 25
+        log: 21
+   */
+    const ms = pino.multistream(streams, {levels: {...levels.values, ...CUSTOM_LEVELS}});
 
     const plogger = pino<"verbose" | "log">({
         // @ts-ignore
@@ -59,7 +73,7 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
             },
         },
         ...extras
-    }, pino.multistream(streams, {levels: {...levels.values, ...CUSTOM_LEVELS}})) as Logger;
+    }, ms) as Logger;
     plogger.labels = [];
 
     plogger.addLabel = function (value) {
@@ -96,7 +110,7 @@ export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context
  *
  * @source
  * */
-export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')]);
+export const loggerTest = buildLogger('silent', [buildDestinationStdout('trace')]);
 
 
 /**
@@ -104,7 +118,14 @@ export const loggerTest = buildLogger('silent', [buildDestinationStdout('debug')
  *
  * @source
  * */
-export const loggerDebug = buildLogger('debug', [buildDestinationStdout('debug')]);
+export const loggerDebug = buildLogger('debug', [buildDestinationStdout('trace')]);
+
+/**
+ * A logger that logs to console at the lowest minimum level, 'trace'. Useful for logging during startup before a loggerApp has been initialized
+ *
+ * @source
+ * */
+export const loggerTrace = buildLogger('trace', [buildDestinationStdout('trace')]);
 
 /**
  * A Logger that logs to console and a static file
@@ -135,7 +156,7 @@ export const loggerApp = (config: LogOptions | object = {}, extras?: LoggerAppEx
         }
     }
 
-    const logger = buildLogger('debug' as LogLevel, streams, pino);
+    const logger = buildLogger('trace' as LogLevel, streams, pino);
     if (error !== undefined) {
         logger.warn(error);
     }
@@ -170,7 +191,7 @@ export const loggerAppRolling = async (config: LogOptions | object = {}, extras?
             error = e;
         }
     }
-    const logger = buildLogger('debug' as LogLevel, streams, pino);
+    const logger = buildLogger('trace' as LogLevel, streams, pino);
     if (error !== undefined) {
         logger.warn(error);
     }

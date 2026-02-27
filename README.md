@@ -75,6 +75,7 @@ These are the loggers that should be used for the majority of your application. 
 
 These loggers are pre-defined for specific use cases:
 
+* [`loggerTrace`](https://foxxmd.github.io/logging/variables/index.loggerTrace.html) - Logs to console at the lowest minimum level, `trace`. Can be used during application startup before a logger app configuration has been parsed.
 * [`loggerDebug`](https://foxxmd.github.io/logging/variables/index.loggerDebug.html) - Logs ONLY to console at minimum `debug` level. Can be used during application startup before a logger app configuration has been parsed.
 * [`loggerTest`](https://foxxmd.github.io/logging/variables/index.loggerTest.html) - A noop logger (will not log anywhere) for use in tests/mockups.
 

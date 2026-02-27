@@ -7,6 +7,7 @@ import {MarkRequired} from "ts-essentials";
  *
  * From lowest to highest:
  *
+ * * `trace`
  * * `debug`
  * * `verbose`
  * * `log`
@@ -48,7 +49,7 @@ export const CUSTOM_LEVELS: LoggerOptions<"verbose" | "log">['customLevels'] = {
 
 const CUSTOM_LEVEL_NAMES = Object.keys(CUSTOM_LEVELS);
 
-export const LOG_LEVEL_NAMES= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug'] as const;
+export const LOG_LEVEL_NAMES= ['silent', 'fatal', 'error', 'warn', 'info', 'log', 'verbose', 'debug', 'trace'] as const;
 
 /**
  * Configure log levels and file options for an AppLogger.

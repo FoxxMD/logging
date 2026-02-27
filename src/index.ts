@@ -16,7 +16,7 @@ import {
     parseLogOptions,
 } from './funcs.js'
 
-import {childLogger, loggerApp, loggerDebug, loggerTest, loggerAppRolling} from './loggers.js';
+import {childLogger, loggerApp, loggerDebug, loggerTest, loggerTrace, loggerAppRolling} from './loggers.js';
 
 export type {
     FileLogOptions,
@@ -35,6 +35,7 @@ export {
     loggerAppRolling,
     loggerDebug,
     loggerTest,
+    loggerTrace,
     LOG_LEVEL_NAMES,
     childLogger,
     parseLogOptions,

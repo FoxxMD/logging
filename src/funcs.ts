@@ -46,7 +46,7 @@ const isFileLogOptions = (obj: any): obj is FileLogOptions => {
  * */
 export const parseLogOptions = (config: LogOptions = {}, options?: FileLogPathOptions): LogOptionsParsed => {
     if (!isLogOptions(config)) {
-        throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug',  -- 'file' may be false.`)
+        throw new Error(`Logging levels were not valid. Must be one of: 'silent', 'fatal', 'error', 'warn', 'info', 'verbose', 'debug', 'trace'  -- 'file' may be false.`)
     }
 
     const {level: configLevel} = config;

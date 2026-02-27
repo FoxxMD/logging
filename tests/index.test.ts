@@ -32,7 +32,7 @@ const testConsoleLogger = (config?: object, colorize = false): [Logger, Transfor
     const opts = parseLogOptions(config, {logBaseDir: process.cwd()});
     const testStream = new PassThrough();
     const rawStream = new PassThrough();
-    const logger = buildLogger('debug', [
+    const logger = buildLogger('trace', [
         buildDestinationStream(
             opts.console,
             {
@@ -53,7 +53,7 @@ const testObjectLogger = (config?: object, object?: boolean): [Logger, Transform
     const opts = parseLogOptions(config, {logBaseDir: process.cwd()});
     const testStream = new PassThrough({objectMode: true});
     const rawStream = new PassThrough();
-    const logger = buildLogger('debug', [
+    const logger = buildLogger('trace', [
         buildDestinationJsonPrettyStream(
             opts.console,
             {
