@@ -205,6 +205,9 @@ nestedChild1.debug('I am nested one level');
 const nestedChild2 = childLogger(nestedChild1, ['Second', 'Third'], { level: 'silent' });
 nestedChild2.info('I do not log because of set level and not enabled by filter');
 
+// without LOG_FILTER_ENABLE from above set, the below logging would be silent
+// because they inherit the level from their parent
+
 const nestedChild3 = childLogger(nestedChild2, ['Fourth']);
 nestedChild3.info('I do log because of filter Third:Fourth');
 
@@ -214,6 +217,18 @@ nestedChild4.info('I do log because of filter Second:*:Foo');
 const nestedChild5 = childLogger(nestedChild4, ['Bar']);
 nestedChild5.info('I do log because of filter Bar');
 ```
+
+The minimum level a child logger is "enabled" to is ENV `LOG_FILTER_ENABLE_LEVEL` or `trace`, by default. It can also be specified by passing `labelEnableLevel` to childLogger options.
+
+The minimum level a child logger is "disabled" to is ENV `LOG_FILTER_DISABLE_LEVEL` or `silent`, by default. It can also be specified by passing `labelDisableLevel` to childLogger options.
+
+There are also options for passing your own function to determine if a child logger should be enabled or disabled. See [`childLogger`](https://foxxmd.github.io/logging/functions/index.childLogger.html) docs for full a full reference.
+
+A caveat to be aware of: **enable/disable by filter is evaluated once, when `childLogger` is instantiated.** This means:
+
+* Only the labels added by `childLogger` insantiation are applicable. Labels added during logging, IE `logger.info({labels: ['Runtime']}, "a log")`, are not considered.
+* Labels that are functions are evaluated **once**, when `childLogger` is instantiated
+* Changing the `LOG_FILTER_*` envs after a childLogger is created will have no effect on it
 
 ### Serializing Objects and Errors
 

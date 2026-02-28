@@ -97,9 +97,9 @@ export const buildLogger = (defaultLevel: LogLevel, streams: LogLevelStreamEntry
 export const childLogger = (parent: Logger, labelsVal: any | any[] = [], context: object = {}, options: ChildLoggerOptions = {}): Logger => {
     const {
         labelEnable = labelsEnableFromEnvSingleton,
-        labelEnableLevel = parent.level,
+        labelEnableLevel = process.env.LOG_FILTER_ENABLE_LEVEL ?? 'trace',
         labelDisable = labelsDisableFromEnvSingleton,
-        labelDisableLevel = 'silent',
+        labelDisableLevel = process.env.LOG_FILTER_DISABLE_LEVEL ?? 'silent',
         ...rest
     } = options;
 
